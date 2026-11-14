@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.17.1
+
+- New sensor `sensor.filament_manager_ams_spools`: state = number of AMS slots with an assigned spool, attribute `slots` lists printer, slot key (`ams1_tray1`), spool name, brand, material, colour, remaining grams and percent. Lets Home Assistant dashboards show the real spool per AMS slot.
+
 ## 1.17.0
 
 - **New page "Printers"** (between Spools and Prints): the live print card shows name, progress ring, layer x / y, remaining time, active slot, nozzle and bed temperature and the stage in plain words ("Changing filament", "Heating the bed", "Paused: filament ran out" and more); in idle state it shows the last print. Below, one card per AMS slot: assigned spool with remaining grams and chips (Assigned, Printer: PLA, active, Low, Almost empty), tap for details (what the printer reports, slot colour and spool colour as hex and RGB with copy, moisture, open spool, empty slot, change spool); a slot with filament but no fitting spool, or whose spool no longer fits the reported colour, asks "Which spool is in AMS 1 · T1?" with candidates. A line at the bottom shows the maintenance status.

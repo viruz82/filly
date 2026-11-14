@@ -26,7 +26,8 @@ _POLL_INTERVAL = 30    # seconds between periodic pushes
 _ENTITY_PENDING    = "sensor.filament_manager_pending_usages"
 _ENTITY_LOW_STOCK  = "sensor.filament_manager_low_stock_spools"
 _ENTITY_UNMATCHED  = "sensor.filament_manager_ams_unmatched"
-_ENTITY_LAST_PRINT      = "sensor.filament_manager_last_print"
+_ENTITY_AMS_SPOOLS      = "sensor.filament_manager_ams_spools"
+_ENTITY_LAST_PRINT      ="sensor.filament_manager_last_print"
 _ENTITY_TOTAL_SPOOLS    = "sensor.filament_manager_total_spools"
 _ENTITY_CONSUMED_SPOOLS = "sensor.filament_manager_consumed_spools"
 _ENTITY_MOISTURE        = "sensor.filament_manager_moisture_spools"
@@ -230,6 +231,27 @@ def _compute(db) -> dict[str, tuple[int, dict]]:
             if not tray_has_match(material, color_hex, spools):
                 unmatched_trays.append(f"{printer.name}:{slot_key} ({material})")
 
+    # ── spools placed in AMS slots (slot key "Printer:ams1_tray1") ───────────
+    slot_spools: list[dict] = []
+    for s in spools:
+        if s.archived or not s.ams_slot:
+            continue
+        printer_name, _, slot_key = s.ams_slot.rpartition(":")
+        slot_spools.append({
+            "printer": printer_name,
+            "slot": slot_key,
+            "id": s.id,
+            "number": s.custom_id,
+            "brand": s.brand,
+            "material": s.material,
+            "color_name": s.color_name,
+            "color_hex": s.color_hex,
+            "name": f"{s.brand} {s.material} {s.color_name}".strip(),
+            "grams": round(s.current_weight_g),
+            "pct": round(s.remaining_pct),
+        })
+    slot_spools.sort(key=lambda d: (d["printer"], d["slot"]))
+
     # ── printer status sensors (one per active printer with a serial) ────────
     import re
 
@@ -335,6 +357,15 @@ def _compute(db) -> dict[str, tuple[int, dict]]:
                 "icon": "mdi:tray-alert",
                 "unit_of_measurement": "trays",
                 "trays": unmatched_trays,
+            },
+        ),
+        _ENTITY_AMS_SPOOLS: (
+            len(slot_spools),
+            {
+                "friendly_name": "Filament Manager: AMS Spools",
+                "icon": "mdi:printer-3d-nozzle",
+                "unit_of_measurement": "slots",
+                "slots": slot_spools,
             },
         ),
         _ENTITY_MOISTURE: (

@@ -41,6 +41,35 @@ class TestLowStockSensor:
         assert attrs["spools"] == ["Jayo PETG Black (149g)"]
 
 
+class TestAmsSpoolsSensor:
+    def test_lists_spools_placed_in_slots(self, session):
+        s = Spool(brand="Jayo", material="PETG", color_name="Black", color_hex="#000000",
+                  initial_weight_g=1000.0, current_weight_g=750.0, archived=False,
+                  ams_slot="Bambu Lab A1:ams1_tray2")
+        other = Spool(brand="X", material="PLA", color_name="Red", color_hex="#FF0000",
+                      initial_weight_g=1000.0, current_weight_g=500.0, archived=False)
+        session.add_all([s, other]); session.commit()
+
+        state, attrs = _compute(session)["sensor.filament_manager_ams_spools"]
+
+        assert state == 1
+        assert attrs["slots"][0]["printer"] == "Bambu Lab A1"
+        assert attrs["slots"][0]["slot"] == "ams1_tray2"
+        assert attrs["slots"][0]["name"] == "Jayo PETG Black"
+        assert attrs["slots"][0]["grams"] == 750
+        assert attrs["slots"][0]["pct"] == 75
+
+    def test_archived_spool_is_not_listed(self, session):
+        s = Spool(brand="Jayo", material="PETG", color_name="Black", color_hex="#000000",
+                  initial_weight_g=1000.0, current_weight_g=0.0, archived=True,
+                  ams_slot="A1:ams1_tray1")
+        session.add(s); session.commit()
+
+        state, attrs = _compute(session)["sensor.filament_manager_ams_spools"]
+
+        assert state == 0 and attrs["slots"] == []
+
+
 class TestSpoolInventorySensor:
     def test_total_counts_only_non_archived(self, session):
         _make_spool(session, material="PLA",  weight_g=1000)
