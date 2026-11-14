@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.0
+
+- **AMS slots are recognised more like a human would**: the colour is compared by perceptual distance (CIE76 ΔE ≤ 10 in Lab space) instead of exact hex equality, because the colour set at the AMS slot for third-party filament is never exactly the inventory colour. Used by the dashboard card, the automatic tray matching in Settings and `sensor.filament_manager_ams_unmatched` (same rule in the browser and in the add-on).
+- **Dashboard card "Which spool is in AMS 1 · T1?"**: for a slot where nothing fits, it lists up to three candidates (colour fits, other material) with the button **Assign**, or says that there is no spool in the inventory. For a slot that fits but has no spool assigned yet it shows a soft suggestion ("Fits material and colour") so that the assignment is made once and kept.
+- Tests: 449 backend tests (colour distance reference values, tolerance, material rules).
+
 ## 1.15.0
 
 - **Colour as RGB**: the spool detail shows every colour of a spool as hex **and** as `R / G / B`; the spool form shows the RGB values under the colour picker. Click a value to copy it (`#C2B29A` or `194, 178, 154`) — handy for the colour dialog in Bambu Studio.

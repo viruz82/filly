@@ -2,14 +2,14 @@ import { useState, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useConfirm } from '../components/ui/Feedback'
+import { useConfirm, useToast } from '../components/ui/Feedback'
 import PageHeader from '../components/ui/PageHeader'
 import StatTile from '../components/ui/StatTile'
 import Ring from '../components/ui/Ring'
 import { api } from '../api'
 import type { DashboardStats, PrintJob, PrinterConfig, PrinterStatus, AMSTray, Spool, PrinterEnergy } from '../types'
 import { AlertTriangle, Printer, Zap, CheckCircle2, ChevronRight } from 'lucide-react'
-import { findBestSpoolMatch } from '../utils/amsMatch'
+import { rankSpoolCandidates, type SpoolCandidate } from '../utils/amsMatch'
 import { formatDistanceToNow } from 'date-fns'
 import { enUS, de, es, type Locale } from 'date-fns/locale'
 import { useHATZ, useCurrencyFormatter, useCurrencySymbol } from '../hooks/useHATZ'
@@ -193,8 +193,12 @@ function PrintRow({ job }: { job: PrintJob }) {
 
 // ── AMS mismatch alert ────────────────────────────────────────────────────────
 
+interface AmsRow { tr: AMSTray; kind: 'mismatch' | 'suggest'; candidates: SpoolCandidate[] }
+
 function AMSPrinterAlert({ printer, spools }: { printer: PrinterConfig; spools: Spool[] }) {
   const { t } = useTranslation()
+  const qc = useQueryClient()
+  const toast = useToast()
 
   const { data: trays = [] } = useQuery<AMSTray[]>({
     queryKey: ['printer-ams', printer.id],
@@ -202,35 +206,82 @@ function AMSPrinterAlert({ printer, spools }: { printer: PrinterConfig; spools: 
     refetchInterval: 30_000,
   })
 
-  const mismatches = trays.filter(tr =>
-    tr.ha_material &&
-    tr.ha_color_hex &&
-    tr.ha_remaining !== null &&
-    parseFloat(tr.ha_remaining) > 0 &&
-    findBestSpoolMatch(tr, spools) === null
-  )
+  const assignMut = useMutation({
+    mutationFn: ({ slot, spoolId }: { slot: string; spoolId: number }) =>
+      api.assignAMSTray(printer.id, slot, spoolId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['printer-ams'] })
+      qc.invalidateQueries({ queryKey: ['spools'] })
+      toast(t('dashboard.amsAssigned'))
+    },
+    onError: (e: Error) => toast.error(e.message),
+  })
 
-  if (mismatches.length === 0) return null
+  // mismatch: nothing in the inventory fits the loaded filament (offer colour-only candidates)
+  // suggest:  a spool fits, but the slot has no assigned spool yet ("assign once, then it is known")
+  const rows = trays.flatMap((tr): AmsRow[] => {
+    if (!tr.ha_material || !tr.ha_color_hex) return []
+    if (tr.ha_remaining === null || parseFloat(tr.ha_remaining) <= 0) return []
+    const ranked = rankSpoolCandidates(tr, spools)
+    if (!ranked.some(c => c.materialOk)) return [{ tr, kind: 'mismatch', candidates: ranked.slice(0, 3) }]
+    if (!tr.spool) return [{ tr, kind: 'suggest', candidates: ranked.filter(c => c.materialOk).slice(0, 3) }]
+    return []
+  })
+
+  if (rows.length === 0) return null
+  const warn = rows.some(r => r.kind === 'mismatch')
 
   return (
-    <div className="card border border-warn/40 bg-warn/15">
+    <div className={`card border ${warn ? 'border-warn/40 bg-warn/15' : 'border-info/40 bg-info/10'}`}>
       <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-        <AlertTriangle size={14} className="text-warn" /> {t('dashboard.amsNoMatchCard')} — {printer.name}
+        {warn
+          ? <AlertTriangle size={14} className="text-warn" />
+          : <Printer size={14} className="text-info" />}
+        {warn ? t('dashboard.amsNoMatchCard') : t('dashboard.amsSuggestCard')} — {printer.name}
       </h3>
       <div>
-        {mismatches.map(tr => (
-          <div key={tr.slot_key} className="flex items-center gap-3 py-2 border-b border-warn/40 last:border-0">
-            <span
-              className="w-3 h-3 rounded-full shrink-0 border border-white/20"
-              style={{ background: tr.ha_color_hex ?? '#888' }}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-white">
-                {tr.slot_key.replace(/ams(\d+)_tray(\d+)/, 'AMS $1 · T$2')}
-                <span className="text-gray-400 ml-2">{tr.ha_material}</span>
-              </p>
+        {rows.map(({ tr, kind, candidates }) => (
+          <div key={tr.slot_key} className={`py-2 border-b last:border-0 ${warn ? 'border-warn/40' : 'border-info/30'}`}>
+            <div className="flex items-center gap-3">
+              <span
+                className="w-3 h-3 rounded-full shrink-0 border border-white/20"
+                style={{ background: tr.ha_color_hex ?? '#888' }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-white">
+                  {t('dashboard.amsWhichSpool', { slot: tr.slot_key.replace(/ams(\d+)_tray(\d+)/, 'AMS $1 · T$2') })}
+                  <span className="text-gray-400 ml-2">{tr.ha_material}</span>
+                </p>
+              </div>
+              {candidates.length === 0 && (
+                <span className="text-xs text-gray-400 shrink-0">{t('dashboard.amsNoMatch')}</span>
+              )}
             </div>
-            <span className="text-xs text-gray-400 shrink-0">{t('dashboard.amsNoMatch')}</span>
+            {candidates.map(c => (
+              <div key={c.spool.id} className="flex items-center gap-2 mt-2 pl-6">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0 border border-white/20"
+                  style={{ background: c.spool.color_hex }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-white truncate">
+                    {c.spool.custom_id ? `#${c.spool.custom_id} ` : ''}{c.spool.brand} {c.spool.material}{c.spool.subtype ? ` ${c.spool.subtype}` : ''} — {c.spool.color_name}
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    {fmtNum(c.spool.current_weight_g, 0)} g · {c.materialOk ? t('dashboard.amsReasonBoth') : t('dashboard.amsReasonColor')}
+                    {kind === 'suggest' && c.spool.ams_slot ? ` · ${t('dashboard.amsMoves')}` : ''}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn bg-surface-3 hover:bg-surface-4 text-xs shrink-0"
+                  disabled={assignMut.isPending}
+                  onClick={() => assignMut.mutate({ slot: tr.slot_key, spoolId: c.spool.id })}
+                >
+                  {t('dashboard.amsAssign')}
+                </button>
+              </div>
+            ))}
           </div>
         ))}
       </div>

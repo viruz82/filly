@@ -57,12 +57,55 @@ def material_matches(tray_material: str, spool) -> bool:
     return tray in (mat, full, base_material(mat))
 
 
+# ΔE (CIE76, Lab) up to which two colours count as "the same colour" for an AMS slot.
+# Keep in sync with COLOR_TOLERANCE in frontend/src/utils/color.ts.
+COLOR_TOLERANCE = 10.0
+
+
+def _rgb(h: str):
+    h = _normalize_hex(h or "")
+    if len(h) != 6:
+        return None
+    try:
+        return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    except ValueError:
+        return None
+
+
+def _lab(rgb) -> tuple[float, float, float]:
+    def lin(c: int) -> float:
+        s = c / 255
+        return s / 12.92 if s <= 0.04045 else ((s + 0.055) / 1.055) ** 2.4
+
+    r, g, b = lin(rgb[0]), lin(rgb[1]), lin(rgb[2])
+    x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047
+    y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b
+    z = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883
+
+    def f(t: float) -> float:
+        return t ** (1 / 3) if t > 216 / 24389 else ((24389 / 27) * t + 16) / 116
+
+    fx, fy, fz = f(x), f(y), f(z)
+    return 116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)
+
+
+def color_delta(a: str, b: str) -> float | None:
+    """Perceptual distance (CIE76 ΔE) between two hex colours; None if one is not a valid hex colour."""
+    ra, rb = _rgb(a), _rgb(b)
+    if ra is None or rb is None:
+        return None
+    la, lb = _lab(ra), _lab(rb)
+    return sum((x - y) ** 2 for x, y in zip(la, lb)) ** 0.5
+
+
 def tray_has_match(material: str, color_hex: str, all_spools: list) -> bool:
-    col = _normalize_hex(color_hex)
     for s in all_spools:
         if s.current_weight_g <= 0:
             continue
-        if material_matches(material, s) and _normalize_hex(s.color_hex or "") == col:
+        if not material_matches(material, s):
+            continue
+        d = color_delta(color_hex, s.color_hex or "")
+        if d is not None and d <= COLOR_TOLERANCE:
             return True
     return False
 

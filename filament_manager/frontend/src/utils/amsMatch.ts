@@ -1,9 +1,5 @@
 import type { AMSTray, Spool } from '../types'
-
-// Strip '#' prefix and alpha channel suffix, uppercase — e.g. "#ff5733ff" → "FF5733"
-function normalizeHex(hex: string): string {
-  return hex.replace(/^#/, '').slice(0, 6).toUpperCase()
-}
+import { COLOR_TOLERANCE, colorDelta } from './color'
 
 /** Basic filament type: "PLA+ 2.0" → "pla", "PETG HF" → "petg"; "PLA-CF" stays "pla-cf". */
 export function baseMaterial(material: string): string {
@@ -23,34 +19,53 @@ export function materialMatches(trayMaterial: string, spool: Pick<Spool, 'materi
   return tray === mat || tray === full || tray === baseMaterial(mat)
 }
 
+export interface SpoolCandidate {
+  spool: Spool
+  /** material fits (equal, material + subtype, or basic type) */
+  materialOk: boolean
+  /** perceptual colour distance to the colour the printer reports (0 = identical) */
+  delta: number
+}
+
 /**
- * Find the best spool for a given AMS tray based on material + color match.
- * Tie-breaking: lowest remaining weight first (use partial spools), then oldest
- * purchase date (FiFo).  Returns null if no spool matches or tray has no MQTT data.
+ * Spools that could be the one in an AMS tray, best first.
+ * A spool is a candidate when its colour is within COLOR_TOLERANCE of the tray colour; the material
+ * does not have to fit ("colour fits, other material" is shown as a suggestion, like a spool whose
+ * product line is named differently). Order: material fits first, then identical colour, then the
+ * lowest remaining weight (use partial spools), then the oldest purchase date (FiFo).
+ * Pass excludeIds to keep the same spool from being offered for several trays.
+ */
+export function rankSpoolCandidates(tray: AMSTray, spools: Spool[], excludeIds?: Set<number>): SpoolCandidate[] {
+  if (!tray.ha_material || !tray.ha_color_hex) return []
+  const trayMaterial = tray.ha_material
+
+  const candidates: SpoolCandidate[] = []
+  for (const s of spools) {
+    if (excludeIds?.has(s.id)) continue
+    if (s.archived || s.current_weight_g <= 0) continue
+    const delta = colorDelta(tray.ha_color_hex, s.color_hex)
+    if (delta === null || delta > COLOR_TOLERANCE) continue
+    candidates.push({ spool: s, materialOk: materialMatches(trayMaterial, s), delta })
+  }
+
+  return candidates.sort((a, b) => {
+    if (a.materialOk !== b.materialOk) return a.materialOk ? -1 : 1
+    const ea = a.delta <= 1 ? 0 : 1
+    const eb = b.delta <= 1 ? 0 : 1
+    if (ea !== eb) return ea - eb
+    const dw = a.spool.current_weight_g - b.spool.current_weight_g
+    if (dw !== 0) return dw
+    const aDate = a.spool.purchased_at ? new Date(a.spool.purchased_at).getTime() : Infinity
+    const bDate = b.spool.purchased_at ? new Date(b.spool.purchased_at).getTime() : Infinity
+    return aDate - bDate
+  })
+}
+
+/**
+ * Find the best spool for a given AMS tray based on material + colour (within tolerance).
+ * Returns null if no spool matches or the tray has no MQTT data.
  * Pass excludeIds to prevent the same spool being assigned to multiple trays.
  */
 export function findBestSpoolMatch(tray: AMSTray, spools: Spool[], excludeIds?: Set<number>): Spool | null {
-  if (!tray.ha_material || !tray.ha_color_hex) return null
-
-  const col = normalizeHex(tray.ha_color_hex)
-
-  const candidates = spools.filter(s => {
-    if (excludeIds?.has(s.id)) return false
-    if (s.archived) return false
-    return (
-      materialMatches(tray.ha_material as string, s) &&
-      normalizeHex(s.color_hex) === col &&
-      s.current_weight_g > 0
-    )
-  })
-
-  if (candidates.length === 0) return null
-
-  return [...candidates].sort((a, b) => {
-    const dw = a.current_weight_g - b.current_weight_g
-    if (dw !== 0) return dw
-    const aDate = a.purchased_at ? new Date(a.purchased_at).getTime() : Infinity
-    const bDate = b.purchased_at ? new Date(b.purchased_at).getTime() : Infinity
-    return aDate - bDate
-  })[0]
+  return rankSpoolCandidates(tray, spools, excludeIds).find(c => c.materialOk)?.spool ?? null
 }

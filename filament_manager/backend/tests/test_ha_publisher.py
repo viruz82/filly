@@ -10,7 +10,7 @@ and get_printer_cloud_status to avoid real network calls.
 """
 import pytest
 from unittest.mock import patch
-from app.ha_publisher import _compute, base_material, material_matches, tray_has_match
+from app.ha_publisher import COLOR_TOLERANCE, _compute, base_material, color_delta, material_matches, tray_has_match
 from app.models import PrinterConfig, Spool
 
 
@@ -245,7 +245,22 @@ class TestAmsTrayMatching:
         spools = [self._spool("PLA+ 2.0")]
         assert tray_has_match("PLA", "#c2b29a", spools)
         assert tray_has_match("PLA", "#C2B29AFF", spools)       # alpha suffix ignored
-        assert not tray_has_match("PLA", "#C2B29B", spools)
+        assert not tray_has_match("PLA", "#2E9E5B", spools)     # clearly another colour
+
+    def test_slightly_different_shade_still_matches(self):
+        # the colour set at the AMS slot is never exactly the inventory colour
+        spools = [self._spool("PLA+ 2.0", color="#C2B29A")]
+        assert tray_has_match("PLA", "#C8B89E", spools)
+        assert tray_has_match("PLA", "#C2B29B", spools)
+
+    def test_colour_delta_reference_values(self):
+        assert color_delta("#000000", "#000000") == 0
+        assert color_delta("#000000", "#FFFFFF") == pytest.approx(100.0, abs=0.05)
+        assert color_delta("#FF0000", "#00FF00") == pytest.approx(170.6, abs=0.5)
+        assert color_delta("#C2B29A", "#C8B89E") < COLOR_TOLERANCE
+        assert color_delta("#C2B29A", "#FFFFFF") > COLOR_TOLERANCE
+        assert color_delta("#abc", "#FFFFFF") is None and color_delta("", "#FFFFFF") is None
+        assert color_delta("#112233", "#445566") == color_delta("#445566", "#112233")
 
     def test_empty_spool_does_not_match(self):
         assert not tray_has_match("PLA", "#C2B29A", [self._spool("PLA+ 2.0", weight=0.0)])
