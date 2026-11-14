@@ -70,6 +70,27 @@ class TestAmsSpoolsSensor:
         assert state == 0 and attrs["slots"] == []
 
 
+class TestLastPrintCostBreakdown:
+    def test_last_print_lists_material_energy_wear_and_sums_to_total(self, session):
+        from datetime import datetime
+        from app.models import PrintJob, PrintUsage
+        s = _make_spool(session, material="PLA", weight_g=1000.0)
+        s.purchase_price = 20.0  # 0,02 Euro je Gramm
+        session.commit()
+        job = PrintJob(name="Teepee", started_at=datetime(2026, 11, 14, 17, 50),
+                       finished_at=datetime(2026, 11, 14, 23, 3),
+                       energy_kwh=0.3931, energy_cost=0.1304, wear_cost=1.0426)
+        job.usages.append(PrintUsage(spool_id=s.id, grams_used=100.0))
+        session.add(job); session.commit()
+
+        _, attrs = _compute(session)["sensor.filament_manager_last_print"]
+
+        assert attrs["material_cost"] == 2.0
+        assert attrs["energy_cost"] == 0.1304
+        assert attrs["wear_cost"] == 1.0426
+        assert round(attrs["material_cost"] + attrs["energy_cost"] + attrs["wear_cost"], 4) == attrs["total_cost"]
+
+
 class TestSpoolInventorySensor:
     def test_total_counts_only_non_archived(self, session):
         _make_spool(session, material="PLA",  weight_g=1000)

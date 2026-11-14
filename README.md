@@ -1,10 +1,10 @@
-# Filament Manager (Fork)
+# Filly
 
-A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
+*Your filament friend.* A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
 
-![Version](https://img.shields.io/badge/version-1.17.1-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
+![Version](https://img.shields.io/badge/version-1.17.2-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
 
-> **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
+> **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filly", formerly "Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
 
 ---
 
@@ -112,7 +112,7 @@ Screenshots show demo data, not a real inventory.
 
 Go to **Settings → Add-ons → Add-on Store** → three-dot menu → **Repositories** → paste `https://github.com/viruz82/filament-manager` → **Add**.
 
-Once "Filament Manager (Fork)" appears, open it and press **Install**.
+Once "Filly" appears, open it and press **Install**.
 
 The sensors are named `sensor.filament_manager_*` like in the original, so **do not run the original and the fork at the same time** (they would overwrite each other's sensors). To migrate, export the full JSON backup in the original (**Settings → Export / Import**), stop it, then import the file in the fork.
 

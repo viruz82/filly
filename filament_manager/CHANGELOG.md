@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.17.2
+
+- **Renamed to "Filly"** (display name only): add-on name, panel title, app header with the line "Your filament friend" (de: "Dein Filament-Kumpel", es: "Tu amigo del filamento"), README title. Add-on slug, sensor names (`sensor.filament_manager_*`) and data are unchanged. Still a fork of cgradl/filament-manager (MIT), credit stays.
+- Sensor `sensor.filament_manager_last_print` gets the cost breakdown as attributes `material_cost`, `energy_cost` and `wear_cost` (their sum is `total_cost`), so dashboards can show what each part of a print cost.
+
 ## 1.17.1
 
 - New sensor `sensor.filament_manager_ams_spools`: state = number of AMS slots with an assigned spool, attribute `slots` lists printer, slot key (`ams1_tray1`), spool name, brand, material, colour, remaining grams and percent. Lets Home Assistant dashboards show the real spool per AMS slot.

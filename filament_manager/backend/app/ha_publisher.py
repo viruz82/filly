@@ -317,6 +317,10 @@ def _compute(db) -> dict[str, tuple[int, dict]]:
             "success": last_job.success,
             "total_grams": job_grams,
             "total_cost": round(last_job.total_cost, 4),
+            # Aufschluesselung: material_cost + energy_cost + wear_cost = total_cost
+            "material_cost": round(last_job.material_cost, 4),
+            "energy_cost": round(last_job.energy_cost or 0, 4),
+            "wear_cost": round(last_job.wear_cost or 0, 4),
             "energy_kwh": last_job.energy_kwh,
             "url": last_job.url,
             "materials": job_materials,
