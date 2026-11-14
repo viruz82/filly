@@ -15,6 +15,7 @@ survive until the next HA restart — the 30-second loop recreates them quickly)
 """
 import asyncio
 import logging
+import re
 
 from .database import SessionLocal
 from .models import PrintJob, Spool, UserPreferences
@@ -33,6 +34,37 @@ _ENTITY_MAINTENANCE     = "sensor.filament_manager_maintenance_due"
 
 _trigger_event: asyncio.Event | None = None
 _event_loop: asyncio.AbstractEventLoop | None = None
+
+
+def _normalize_hex(h: str) -> str:
+    return h.lstrip("#")[:6].upper()
+
+
+def base_material(material: str) -> str:
+    """Basic filament type: 'PLA+ 2.0' -> 'pla', 'PETG HF' -> 'petg'; 'PLA-CF' stays 'pla-cf'."""
+    return re.split(r"[\s+]", material.strip().lower(), maxsplit=1)[0]
+
+
+def material_matches(tray_material: str, spool) -> bool:
+    """Does the material the printer reports for a tray fit the spool?
+
+    Third-party filament has no RFID chip, so the AMS only knows the basic type the user
+    set ("PLA"), while the inventory often holds the product line ("PLA+ 2.0").
+    """
+    tray = tray_material.strip().lower()
+    mat = (spool.material or "").strip().lower()
+    full = f"{mat} {spool.subtype}".lower() if spool.subtype else mat
+    return tray in (mat, full, base_material(mat))
+
+
+def tray_has_match(material: str, color_hex: str, all_spools: list) -> bool:
+    col = _normalize_hex(color_hex)
+    for s in all_spools:
+        if s.current_weight_g <= 0:
+            continue
+        if material_matches(material, s) and _normalize_hex(s.color_hex or "") == col:
+            return True
+    return False
 
 
 def _get_event() -> asyncio.Event:
@@ -128,22 +160,6 @@ def _compute(db) -> dict[str, tuple[int, dict]]:
     from . import bambu_cloud_client
     from .models import PrinterConfig
 
-    def _normalize_hex(h: str) -> str:
-        return h.lstrip("#")[:6].upper()
-
-    def _tray_has_match(material: str, color_hex: str, all_spools: list) -> bool:
-        mat = material.lower()
-        col = _normalize_hex(color_hex)
-        for s in all_spools:
-            if s.current_weight_g <= 0:
-                continue
-            spool_mat = f"{s.material} {s.subtype}".lower() if s.subtype else s.material.lower()
-            mat_match = s.material.lower() == mat or spool_mat == mat
-            col_match = _normalize_hex(s.color_hex or "") == col
-            if mat_match and col_match:
-                return True
-        return False
-
     unmatched_trays: list[str] = []
     # order_by(id) keeps slug-collision suffixes deterministic across pushes
     printers = (
@@ -168,7 +184,7 @@ def _compute(db) -> dict[str, tuple[int, dict]]:
                 continue   # not tracked by AMS
             if remain == 0:
                 continue   # empty — nothing to match
-            if not _tray_has_match(material, color_hex, spools):
+            if not tray_has_match(material, color_hex, spools):
                 unmatched_trays.append(f"{printer.name}:{slot_key} ({material})")
 
     # ── printer status sensors (one per active printer with a serial) ────────

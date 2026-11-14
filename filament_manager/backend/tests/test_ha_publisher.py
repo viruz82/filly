@@ -10,7 +10,7 @@ and get_printer_cloud_status to avoid real network calls.
 """
 import pytest
 from unittest.mock import patch
-from app.ha_publisher import _compute
+from app.ha_publisher import _compute, base_material, material_matches, tray_has_match
 from app.models import PrinterConfig, Spool
 
 
@@ -211,3 +211,41 @@ class TestStalePrinterEntityCleanup:
             assert hp._last_printer_entities == set()
         finally:
             hp._last_printer_entities = saved
+
+
+class TestAmsTrayMatching:
+    """Material the printer reports ("PLA") vs. the product line in the inventory ("PLA+ 2.0")."""
+
+    @staticmethod
+    def _spool(material, subtype=None, color="#C2B29A", weight=400.0):
+        return Spool(brand="SUNLU", material=material, subtype=subtype, color_name="Oak",
+                     color_hex=color, initial_weight_g=1000.0, current_weight_g=weight)
+
+    @pytest.mark.parametrize("raw,expected", [
+        ("PLA+ 2.0", "pla"), ("PLA+", "pla"), ("PLA", "pla"), ("PETG HF", "petg"),
+        ("PLA-CF", "pla-cf"), ("  ABS ", "abs"),
+    ])
+    def test_base_material(self, raw, expected):
+        assert base_material(raw) == expected
+
+    def test_plus_line_matches_basic_type(self):
+        assert material_matches("PLA", self._spool("PLA+ 2.0"))
+        assert material_matches("PLA", self._spool("PLA+"))
+
+    def test_exact_and_subtype_combination_still_match(self):
+        assert material_matches("PLA", self._spool("PLA"))
+        assert material_matches("PLA Silk", self._spool("PLA", subtype="Silk"))
+
+    def test_different_types_do_not_match(self):
+        assert not material_matches("PETG", self._spool("PLA+ 2.0"))
+        assert not material_matches("PLA", self._spool("PLA-CF"))
+        assert not material_matches("PLA-CF", self._spool("PLA"))
+
+    def test_tray_match_needs_colour_too(self):
+        spools = [self._spool("PLA+ 2.0")]
+        assert tray_has_match("PLA", "#c2b29a", spools)
+        assert tray_has_match("PLA", "#C2B29AFF", spools)       # alpha suffix ignored
+        assert not tray_has_match("PLA", "#C2B29B", spools)
+
+    def test_empty_spool_does_not_match(self):
+        assert not tray_has_match("PLA", "#C2B29A", [self._spool("PLA+ 2.0", weight=0.0)])
