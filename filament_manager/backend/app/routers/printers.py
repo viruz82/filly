@@ -303,7 +303,8 @@ async def get_printer_status(printer_id: int, db: Session = Depends(get_db)):
     if not p.bambu_serial:
         return {k: None for k in ("print_stage", "print_progress", "remaining_time",
                                    "nozzle_temp", "bed_temp", "current_file",
-                                   "print_weight", "ams_active", "active_tray")}
+                                   "print_weight", "ams_active", "active_tray",
+                                   "layer_num", "total_layer_num", "stage_code")}
 
     from .. import bambu_cloud_client
     raw = bambu_cloud_client.get_printer_cloud_status(p.bambu_serial)
@@ -327,4 +328,8 @@ async def get_printer_status(printer_id: int, db: Session = Depends(get_db)):
         "print_weight":   str(raw["gcode_file_weight"]) if raw.get("gcode_file_weight") is not None else None,
         "ams_active":     None,
         "active_tray":    active_tray,
+        # live detail for the Printers page: layer x / y and the printer's stage code (stg_cur, 255 = none)
+        "layer_num":       str(raw["layer_num"]) if raw.get("layer_num") is not None else None,
+        "total_layer_num": str(raw["total_layer_num"]) if raw.get("total_layer_num") is not None else None,
+        "stage_code":      str(raw["stg_cur"]) if raw.get("stg_cur") is not None else None,
     }

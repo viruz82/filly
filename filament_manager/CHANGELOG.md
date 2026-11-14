@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.17.0
+
+- **New page "Printers"** (between Spools and Prints): the live print card shows name, progress ring, layer x / y, remaining time, active slot, nozzle and bed temperature and the stage in plain words ("Changing filament", "Heating the bed", "Paused: filament ran out" and more); in idle state it shows the last print. Below, one card per AMS slot: assigned spool with remaining grams and chips (Assigned, Printer: PLA, active, Low, Almost empty), tap for details (what the printer reports, slot colour and spool colour as hex and RGB with copy, moisture, open spool, empty slot, change spool); a slot with filament but no fitting spool, or whose spool no longer fits the reported colour, asks "Which spool is in AMS 1 · T1?" with candidates. A line at the bottom shows the maintenance status.
+- `GET /api/printers/{id}/status` additionally returns `layer_num`, `total_layer_num` and `stage_code` (the printer's `stg_cur`).
+- German UI: "Drucke" is now **"Druckaufträge"** (menu, page title, "Alle Druckaufträge"); the phone's bottom bar shows Overview, Spools, Printers, Prints and More (Projects moved under More).
+- The shared candidate list is one component for the dashboard card and the new page.
+- Tests: 463 backend tests.
+
 ## 1.16.1
 
 - **Silent spool assignment for AMS slots**: printing books the grams from the spool assigned to the slot when the print starts, and a slot without a spool got no booking (0 g). The add-on now assigns a spool by itself at print start and every 30 seconds when the match is sure: the slot has no spool, exactly one active spool fits the reported material and colour, that colour is very close (distance up to 3) and the spool is not in another slot. Everything else stays a question on the dashboard.

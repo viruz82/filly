@@ -8,6 +8,7 @@ import { Spinner, ChunkErrorBoundary } from './components/ui/Loading'
 const pageLoaders = {
   dashboard:   () => import('./pages/Dashboard'),
   spools:      () => import('./pages/Spools'),
+  printers:    () => import('./pages/Printers'),
   prints:      () => import('./pages/Prints'),
   projects:    () => import('./pages/Projects'),
   maintenance: () => import('./pages/Maintenance'),
@@ -15,6 +16,7 @@ const pageLoaders = {
 }
 const Dashboard   = lazy(pageLoaders.dashboard)
 const Spools      = lazy(pageLoaders.spools)
+const Printers    = lazy(pageLoaders.printers)
 const Prints      = lazy(pageLoaders.prints)
 const Projects    = lazy(pageLoaders.projects)
 const Maintenance = lazy(pageLoaders.maintenance)
@@ -48,6 +50,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/spools" element={<Spools />} />
+        <Route path="/printers" element={<Printers />} />
         <Route path="/prints" element={<Prints />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/maintenance" element={<Maintenance />} />

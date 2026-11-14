@@ -10,6 +10,7 @@ import { api } from '../api'
 import type { DashboardStats, PrintJob, PrinterConfig, PrinterStatus, AMSTray, Spool, PrinterEnergy } from '../types'
 import { AlertTriangle, Printer, Zap, CheckCircle2, ChevronRight } from 'lucide-react'
 import { rankSpoolCandidates, type SpoolCandidate } from '../utils/amsMatch'
+import { CandidateList } from '../components/printers/AmsCandidates'
 import { formatDistanceToNow } from 'date-fns'
 import { enUS, de, es, type Locale } from 'date-fns/locale'
 import { useHATZ, useCurrencyFormatter, useCurrencySymbol } from '../hooks/useHATZ'
@@ -297,31 +298,12 @@ function AMSPrinterAlert({ printer, spools }: { printer: PrinterConfig; spools: 
                 <span className="text-xs text-gray-400 shrink-0">{t('dashboard.amsNoMatch')}</span>
               )}
             </div>
-            {candidates.map(c => (
-              <div key={c.spool.id} className="flex items-center gap-2 mt-2 pl-6">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0 border border-white/20"
-                  style={{ background: c.spool.color_hex }}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-white truncate">
-                    {c.spool.custom_id ? `#${c.spool.custom_id} ` : ''}{c.spool.brand} {c.spool.material}{c.spool.subtype ? ` ${c.spool.subtype}` : ''} — {c.spool.color_name}
-                  </p>
-                  <p className="text-[11px] text-gray-400">
-                    {fmtNum(c.spool.current_weight_g, 0)} g · {c.materialOk ? t('dashboard.amsReasonBoth') : t('dashboard.amsReasonColor')}
-                    {kind === 'suggest' && c.spool.ams_slot ? ` · ${t('dashboard.amsMoves')}` : ''}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="btn bg-surface-3 hover:bg-surface-4 text-xs shrink-0"
-                  disabled={assignMut.isPending}
-                  onClick={() => assignMut.mutate({ slot: tr.slot_key, spoolId: c.spool.id })}
-                >
-                  {t('dashboard.amsAssign')}
-                </button>
-              </div>
-            ))}
+            <CandidateList
+              candidates={candidates}
+              pending={assignMut.isPending}
+              moves={kind === 'suggest'}
+              onAssign={spoolId => assignMut.mutate({ slot: tr.slot_key, spoolId })}
+            />
           </div>
         ))}
       </div>

@@ -158,6 +158,23 @@ class TestPrinterStatus:
         assert r.status_code == 200
         assert r.json()["print_stage"] == "IDLE"
 
+    def test_status_carries_layer_and_stage_for_the_printers_page(self, client):
+        printer_id = _create_printer(client, bambu_serial="ABC123")["id"]
+        fake_status = {"gcode_state": "RUNNING", "mc_percent": 2, "mc_remaining_time": 332,
+                       "nozzle_temper": 220.2, "bed_temper": 40.4, "subtask_name": "teepee",
+                       "layer_num": 1, "total_layer_num": 937, "stg_cur": 4, "tray_now": "0"}
+        with patch("app.bambu_cloud_client.get_printer_cloud_status", return_value=fake_status):
+            with patch("app.bambu_cloud_client.get_ams_unit_tray_counts", return_value={}):
+                data = client.get(f"/api/printers/{printer_id}/status").json()
+        assert (data["layer_num"], data["total_layer_num"], data["stage_code"]) == ("1", "937", "4")
+
+    def test_status_without_layer_data_gives_none(self, client):
+        printer_id = _create_printer(client, bambu_serial="ABC123")["id"]
+        with patch("app.bambu_cloud_client.get_printer_cloud_status", return_value={"gcode_state": "IDLE"}):
+            with patch("app.bambu_cloud_client.get_ams_unit_tray_counts", return_value={}):
+                data = client.get(f"/api/printers/{printer_id}/status").json()
+        assert data["layer_num"] is None and data["stage_code"] is None
+
     def test_status_nonexistent_printer_returns_404(self, client):
         r = client.get("/api/printers/9999/status")
         assert r.status_code == 404

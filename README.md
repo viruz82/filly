@@ -2,7 +2,7 @@
 
 A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
 
-![Version](https://img.shields.io/badge/version-1.16.1-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
+![Version](https://img.shields.io/badge/version-1.17.0-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
 
 > **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
 
@@ -49,6 +49,10 @@ Screenshots show demo data, not a real inventory.
 
 ![Labels](filament_manager/docs/labels.png)
 
+**Printers: live print and AMS slots**
+
+![Printers](filament_manager/docs/printers.png)
+
 **Prints, projects and maintenance**
 
 ![Print history](filament_manager/docs/prints.png)
@@ -57,7 +61,7 @@ Screenshots show demo data, not a real inventory.
 
 **On the phone** (bottom navigation, list, detail sheet)
 
-<img src="filament_manager/docs/m-dashboard.png" width="240"> <img src="filament_manager/docs/m-spools.png" width="240"> <img src="filament_manager/docs/m-detail.png" width="240">
+<img src="filament_manager/docs/m-dashboard.png" width="240"> <img src="filament_manager/docs/m-printers.png" width="240"> <img src="filament_manager/docs/m-spools.png" width="240"> <img src="filament_manager/docs/m-detail.png" width="240">
 
 ---
 
@@ -68,7 +72,8 @@ Screenshots show demo data, not a real inventory.
 - **Automatic print detection** — monitors your Bambu Lab printer via Bambu Cloud MQTT; creates print records automatically when a print starts
 - **AMS filament tracking** — snapshots filament levels at print start/end; calculates grams used per spool per tray; multi-spool prints (runout swaps, AMS auto-switches) are detected
 - **Suggested filament usage** — on print completion the app pre-fills grams used per tray for review; an optional per-printer *auto-deduct* flag applies it immediately
-- **Live print status** — stage, progress, remaining time and active tray from Bambu Cloud MQTT
+- **Printers page** — live print card (progress, layer x / y, remaining time, the printer's stage in plain words such as "Changing filament", nozzle and bed temperature) and one card per AMS slot with spool, state, colour as hex and RGB and questions ("Which spool is in AMS 1 · T1?"); maintenance status in one line
+- **Silent slot assignment** — a slot with exactly one fitting spool gets it assigned automatically (with Undo), so prints book their grams from the right spool
 - **Spool inventory** — brand, material, subtype, colours (up to 4 for multicolour, shown as hex **and** RGB with click-to-copy, e.g. for Bambu Studio), article number, weight, tare, price, purchase and storage location, notes; archive instead of delete; weight history per spool
 - **Weigh from the list** — enter the scale reading, the remaining weight is calculated with the spool's own tare
 - **AMS spool auto-match** and tray assignment from the spool list; the dashboard asks "Which spool is in AMS 1 · T1?" with ranked candidates (colour compared by perceptual distance, product lines like "PLA+ 2.0" fit the printer's "PLA") and one-click "Assign"
