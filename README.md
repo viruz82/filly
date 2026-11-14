@@ -1,83 +1,115 @@
-# Filament Manager
+# Filament Manager (Fork)
 
 A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
 
-![Version](https://img.shields.io/badge/version-1.4.1-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
+![Version](https://img.shields.io/badge/version-1.14.1-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
 
-> **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0. All credit for the original add-on goes to cgradl; changes made here are offered back upstream as pull requests.
-
----
-
-## ⚠️ Breaking Change — v0.20.0
-
-**The [greghesp/ha-bambulab](https://github.com/greghesp/ha-bambulab) Home Assistant integration is no longer required and is no longer supported.**
-
-If you were using the HA integration as the data source for your printer, your printer configuration will be removed on upgrade. You must reconfigure your printer using **Bambu Lab Cloud** (Settings → Cloud Config → Bambu Lab Cloud → connect with your Bambu account, then add your printer under Settings → Printers).
-
-Spools, print history, and all other data are unaffected.
+> **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
 
 ---
 
-## Features
+## What is different from the original
 
-- **Automatic print detection** — monitors your Bambu Lab printer via Bambu Cloud MQTT; creates print records automatically when a print starts
-- **AMS filament tracking** — snapshots filament levels at print start/end; calculates grams used per spool per tray
-- **Suggested filament usage** — on print completion the app pre-fills grams used per tray for review; spool identity is snapshotted at print start so suggestions always reference the correct spool even if the AMS is changed afterwards; an optional per-printer *auto-deduct* flag applies the deduction immediately without confirmation; a **Reload** button in the Log Usage modal re-fetches the current AMS slot assignments if a spool is assigned after the modal is opened
-- **Multi-spool print support** — manual spool swaps (runout pause + replace) and AMS auto-switches (backup tray same material) are both detected; the Log Usage modal shows two rows for the affected slot with the split pre-calculated from print-start stock; all estimates are editable
-- **Live print status** — active print jobs show real-time stage, progress, remaining time, and active tray from Bambu Cloud MQTT
-- **Spool inventory** — full CRUD for filament spools with brand, material, subtype, color, article number, weight, cost, purchase location, storage location, and last drying date; spools can be marked as a **refill pack** (bulk filament bought without a new physical spool), shown as a badge and broken out separately on the Dashboard
-- **Filament catalog** — manage a master list of filament products (brand, material, subtype, color, article number, hex); CSV import and export (semicolon or comma delimited, Excel UTF-8 BOM supported); selecting a catalog entry auto-fills the spool form; an optional checkbox propagates catalog changes to all spools sharing the same article number
-- **Home Assistant sensor entities** — sensors pushed automatically via the HA States API: pending filament usage confirmations, low-stock spool count, unmatched AMS trays, last completed print (name + printer + grams + cost + materials as attributes), total spools in inventory, consumed (empty) spools (both with per-material breakdowns), and a live printer status sensor per configured printer (running / idle / paused / finished / failed / offline) with progress %, remaining time, and current file as attributes; sensors update on print completion, spool change, and every 30 seconds; no HA configuration required
-- **Print description & model URL** — descriptions show below the print name in history; each print can have a URL (MakerWorld, Printables, etc.) shown as a clickable link icon
-- **Energy tracking** — configure a cumulative kWh HA sensor (e.g. Shelly plug) and an optional electricity price sensor per printer; energy consumed (kWh) and cost (€) are recorded per print and aggregated on projects; standby energy (idle between prints) is tracked separately per printer with a reset button in Settings
-- **Print Projects** — group print jobs into named projects; each project aggregates print count, total time, total filament, total cost, energy (kWh), energy cost, materials used, and nozzle diameters; the project card shows a color-coded filament breakdown (color dot + material + grams) sorted by grams; per-print cost breakdown (material, energy, total) shown in the expanded project view; prints can be individually marked as test prints with the flask icon; assign prints from the project page or from the print form; optional URL field shown as a clickable link icon; full export/import support
-- **AMS spool auto-match** — per-tray sparkle button and "Auto-match" header button find the best inventory spool by material + color; tiebreakers: lowest remaining weight first, then oldest purchase date (FiFo); Dashboard warns when a loaded AMS tray has no matching spool in inventory
-- **Cost analytics** — per-print cost, price per kg, inventory value, and spend by purchase location; all money values are displayed in your HA-configured currency with locale-aware formatting, and price inputs accept both comma and dot decimal separators
-- **Dashboard** — overview charts, low-stock alerts, and recent print history
-- **Print history search & date filter** — filter by name, printer, material, color; quick presets (this/last week/month)
-- **EN / DE / ES interface** — full translations; inherits language from your HA instance by default
-- **HA day/night theme** — follows Home Assistant light/dark mode and accent color
-- **Data export / import** — organised into four tabs: full JSON backup/restore (Filament Manager), spool CSV export/import (Spools), Bambu Cloud print history import, and experimental Spoolman export and import
-- **Spool CSV export / import** — export all spool data as a CSV (Excel-compatible, UTF-8 BOM); re-import comma- or semicolon-delimited files to update or restore spools; upserts by ID
-- **Spool weight history** — every weight change is logged with action type, before/after values, and linked print name; viewable per spool via the history icon
-- **Spool archive** — retire empty or inactive spools with the archive action; archived spools are hidden from inventory, excluded from AMS auto-match, and do not trigger low-stock alerts; toggle "Show archived" in the toolbar to view or restore them
-- **Configurable spool table columns** — show or hide individual columns in the spool table via the column picker; selection is saved locally and persists across sessions
-- **Extra color fields** — spools and filament catalog entries support up to 3 optional extra hex color fields (Color 2–4) for multicolor filaments (silk duo, marble, gradient); extra colors appear as additional dots in the spool table and tile view; purely for inventory — not used in AMS auto-matching
-- **Regional overrides** — timezone, currency, and country can be set manually in Settings → Appearance; overrides take precedence over Home Assistant; app works fully without HA when all three are set
-- **Bambu Lab Filament Sync** (Experimental) — synchronise your spool inventory with the Bambu Lab filament library; choose pull (cloud → local), push (local → cloud), or bidirectional mode; synced spools show a cloud badge; in push/bidirectional mode, weight changes to linked spools are pushed to the Bambu library automatically, and emptied spools (0 g) are removed from it; configure in Settings → Cloud Config
+The original (0.41.3) tracks spools, prints, projects and costs. This fork keeps all of that and adds:
+
+| Area | Original 0.41.3 | This fork |
+|---|---|---|
+| **Spools page** | 21-column table, one filter per column | One bar for tiles **and** list: search, filter chips with counts (Active / Moist / Low / In AMS / Archived), material and location filter, sort menu, summary line; detail column (laptop) or bottom sheet (phone) with every action |
+| **Moisture** | last drying date only | Estimated dryness per spool (material × packaging × time), dryer workflow ("Into dryer" / "Done drying"), warning thresholds, HA sensor |
+| **Costs** | filament + energy | plus **printer wear** per print hour, **per-spool tare**, estimated material cost for prints without a spool, **cost overview per project as PDF** (switchable items, extra line items), **inventory list as PDF** |
+| **Labels** | – | **QR labels** for spools (30×15 mm and other sizes, print profiles), print directly on a **Niimbot D110** over Web Bluetooth, or as PNG / PDF / A4 grid; the QR code opens the spool |
+| **Maintenance** | – | **Maintenance log**: recurring tasks due by print hours, days or grams (first reached wins), A1 template, HA sensor |
+| **Home Assistant** | 3 sensors | plus **long-term statistics** sensors (filament, prints, hours, costs, stock) and a statistics snapshot for dashboards, moisture and maintenance sensors |
+| **AMS** | slot as free text | slot as dropdown of the printer's real trays, assignment straight from the spool list |
+| **Look & feel** | fixed colours, browser dialogs | Home-Assistant-style theme tokens (light / dark), own confirmation dialog, **"Undo" toasts** instead of confirm/alert, numbers in the UI language, **bottom navigation on the phone** |
+| **Speed** | one 1.3 MB bundle | pages load on demand (start bundle ≈ 0.46 MB), charts and label code only when needed |
+| **Code** | very large page files | `Settings`, `Spools` and `Prints` split into focused components |
+
+The full list per version is in the [CHANGELOG](filament_manager/CHANGELOG.md).
 
 ---
 
 ## Screenshots
 
+Screenshots show demo data, not a real inventory.
+
+**Dashboard**
+
 ![Dashboard](filament_manager/docs/dashboard.png)
 
-![Spools](filament_manager/docs/spools1.png)
+**Spools: tiles**
 
-![Spool Tiles](filament_manager/docs/spools2.png)
+![Spool tiles](filament_manager/docs/spools-tiles.png)
 
-![Print History](filament_manager/docs/prints.png)
+**Spools: list with detail column**
 
-![Settings](filament_manager/docs/settings1.png)
-![Settings](filament_manager/docs/settings2.png)
-![Settings](filament_manager/docs/settings3.png)
-![Settings](filament_manager/docs/settings4.png)
-![Settings](filament_manager/docs/settings5.png)
+![Spool list and detail](filament_manager/docs/spools-list.png)
+
+**Labels (QR code, Niimbot D110, PNG / PDF)**
+
+![Labels](filament_manager/docs/labels.png)
+
+**Prints, projects and maintenance**
+
+![Print history](filament_manager/docs/prints.png)
+![Projects](filament_manager/docs/projects.png)
+![Maintenance](filament_manager/docs/maintenance.png)
+
+**On the phone** (bottom navigation, list, detail sheet)
+
+<img src="filament_manager/docs/m-dashboard.png" width="240"> <img src="filament_manager/docs/m-spools.png" width="240"> <img src="filament_manager/docs/m-detail.png" width="240">
+
+---
+
+## Features
+
+**Print tracking and inventory**
+
+- **Automatic print detection** — monitors your Bambu Lab printer via Bambu Cloud MQTT; creates print records automatically when a print starts
+- **AMS filament tracking** — snapshots filament levels at print start/end; calculates grams used per spool per tray; multi-spool prints (runout swaps, AMS auto-switches) are detected
+- **Suggested filament usage** — on print completion the app pre-fills grams used per tray for review; an optional per-printer *auto-deduct* flag applies it immediately
+- **Live print status** — stage, progress, remaining time and active tray from Bambu Cloud MQTT
+- **Spool inventory** — brand, material, subtype, colours (up to 4 for multicolour), article number, weight, tare, price, purchase and storage location, notes; archive instead of delete; weight history per spool
+- **Weigh from the list** — enter the scale reading, the remaining weight is calculated with the spool's own tare
+- **AMS spool auto-match** and tray assignment from the spool list
+- **Filament catalog** with CSV import/export, brand spool weights, optional Bambu Lab filament sync (experimental)
+- **Print projects** — group prints (production and test prints) with aggregated time, filament, cost and energy
+- **Print history** with search and date filter, description and model URL
+
+**Costs and reports** *(extended in this fork)*
+
+- Material cost per spool price, energy from a kWh sensor and price sensor per printer, **wear per print hour**
+- **Project cost overview (PDF)** with switchable items and extra line items; **inventory list (PDF)** grouped by storage location
+
+**Moisture, labels, maintenance** *(new in this fork)*
+
+- **Moisture estimate** per spool with dryer workflow and thresholds
+- **Spool labels** with QR code, print profiles, Niimbot D110 (Web Bluetooth), PNG, PDF, A4 grid
+- **Maintenance log** with tasks due by hours, days or grams
+
+**Everything else**
+
+- **Dashboard** — key figures, charts, recent prints, low-stock alerts
+- **EN / DE / ES** interface, inherits the language from Home Assistant; follows the HA light/dark theme and accent colour
+- **Export / import** — full JSON backup/restore, spool CSV, Bambu Cloud print history import, experimental Spoolman export
+- **Regional overrides** — time zone, currency and country can be set manually
 
 ---
 
 ## Requirements
 
-- Home Assistant with Supervisor (HassOS / Home Assistant OS)
-- A Bambu Lab account (email + password) for cloud connection
+- Home Assistant with Supervisor (Home Assistant OS)
+- A Bambu Lab account (email + password) for the cloud connection
 
 ---
 
 ## Installation
 
-Go to **Settings → Add-ons → Add-on Store** → click the three-dot menu → **Repositories** → paste `https://github.com/cgradl/filament-manager` → **Add**.
+Go to **Settings → Add-ons → Add-on Store** → three-dot menu → **Repositories** → paste `https://github.com/viruz82/filament-manager` → **Add**.
 
-Once the add-on appears, click it and press **Install**.
+Once "Filament Manager (Fork)" appears, open it and press **Install**.
+
+The sensors are named `sensor.filament_manager_*` like in the original, so **do not run the original and the fork at the same time** (they would overwrite each other's sensors). To migrate, export the full JSON backup in the original (**Settings → Export / Import**), stop it, then import the file in the fork.
 
 ---
 
@@ -85,8 +117,10 @@ Once the add-on appears, click it and press **Install**.
 
 1. Open the add-on and go to **Settings → Cloud Config**
 2. Under **Bambu Lab Cloud**, enter your Bambu account email and password and click **Connect** (2FA if required)
-3. Go to **Settings → Printers → Add Printer**, select your device from the dropdown, and save
+3. Go to **Settings → Printers → Add Printer**, select your device from the dropdown, and save. Optionally pick an energy sensor, a price sensor and a wear rate (€ per print hour)
 4. Add your filament spools under **Spools**
+
+**Label printing:** printing directly on a Niimbot D110 needs Web Bluetooth, i.e. Chrome or Edge on a PC or Android phone, opened over **HTTPS**. Set Home Assistant's external URL (**Settings → System → Network**); the labels' QR code and the "Open in browser" button use it. In the Home Assistant Android app use "Open in browser" (the app's own WebView has no Web Bluetooth).
 
 ---
 
@@ -94,22 +128,48 @@ Once the add-on appears, click it and press **Install**.
 
 ### Automatic Print Tracking
 
-Bambu Lab printers push state changes via MQTT. When `gcode_state` transitions to `RUNNING`, a new `PrintJob` is created. On `FINISH` / `FAILED` / `IDLE`, the job is closed and filament usage is fetched from the Bambu Cloud task API.
+Bambu Lab printers push state changes via MQTT. When `gcode_state` transitions to `RUNNING`, a new print job is created. On `FINISH` / `FAILED` / `IDLE`, the job is closed and filament usage is fetched from the Bambu Cloud task API.
 
 ```
-idle → RUNNING     Creates PrintJob, fetches real start time + designTitle from cloud
+idle → RUNNING     Creates print job, fetches real start time + title from cloud
 RUNNING → FINISH   Closes job, fetches weight + per-tray breakdown from cloud task API
 RUNNING → FAILED   Closes job with failed flag
 ```
 
 ### Filament Consumption
 
-Per-tray breakdown comes from the Bambu Cloud task API (`amsDetailMapping`). The spool's `current_weight_g` is updated automatically when auto-deduct is enabled.
+The per-tray breakdown comes from the Bambu Cloud task API (`amsDetailMapping`). The spool's remaining weight is updated automatically when auto-deduct is enabled.
 
 ### Cost Tracking
 
-- `price_per_kg` = purchase price ÷ net weight
-- Per-print cost = Σ (grams_used × cost_per_gram) across all spools used
+- Price per kg = purchase price ÷ net weight
+- Print cost = Σ (grams used × cost per gram) + energy (kWh × price) + wear (print hours × rate)
+- Prints without an assigned spool (typical for imported cloud history) are priced with the average price per gram of the same material
+
+### Moisture Estimate
+
+Nothing is measured. Dryness = `100 − days since drying × material factor × packaging factor × 3` (in %). Packaging per spool (sealed, vacuum, drybox, open, in the AMS …) and all factors are adjustable in **Settings**.
+
+### Maintenance
+
+Each task has limits in print hours, days and/or grams of filament; the first limit reached makes it due. Hours and grams are counted from the prints finished since the task was last done.
+
+---
+
+## Home Assistant Sensors
+
+Pushed automatically through the HA States API (no configuration needed):
+
+| Entity | Description |
+|---|---|
+| `sensor.filament_manager_pending_usages` | Prints awaiting filament usage confirmation |
+| `sensor.filament_manager_low_stock_spools` | Spools below the low-stock threshold |
+| `sensor.filament_manager_ams_unmatched` | AMS trays with no matching spool |
+| `sensor.filament_manager_moisture_spools` | Spools below the dryness warning threshold |
+| `sensor.filament_manager_maintenance_due` | Maintenance tasks that are due (attributes list all tasks) |
+| `sensor.filament_manager_last_print`, `_total_spools`, `_consumed_spools` | Last print, spool counts |
+| `sensor.filament_manager_filament_used`, `_prints`, `_print_hours`, `_cost_total`, `_cost_material`, `_cost_energy`, `_cost_wear`, `_stock_weight`, `_stock_value` | **Long-term statistics** (with `state_class`, usable in statistics graphs) |
+| `sensor.filament_manager_statistics` | One snapshot for dashboards (windows with trend, stock levels, top lists, forecast) |
 
 ---
 
@@ -117,15 +177,16 @@ Per-tray breakdown comes from the Bambu Cloud task API (`amsDetailMapping`). The
 
 - Database: SQLite at `/data/filament.db` (survives updates)
 - Schema migrations run automatically on startup
+- Version series of the fork: new feature = second digit, fix = third digit; every version has a Git tag
 
 ---
 
 ## License
 
-MIT License. Not affiliated with Bambu Lab or Home Assistant.
+MIT License. Not affiliated with Bambu Lab, Niimbot or Home Assistant.
 
 ---
 
-## Makerworld
+## Original author
 
-Check out my 3D models at https://makerworld.com/en/@carasak/
+The original add-on is by [cgradl](https://github.com/cgradl/filament-manager). Check out the author's 3D models at https://makerworld.com/en/@carasak/
