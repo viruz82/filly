@@ -20,6 +20,9 @@
     "cancel": "Abbrechen",
     "close": "Schließen",
     "undo": "Rückgängig",
+    "copy": "Kopieren",
+    "copied": "Kopiert: {{value}}",
+    "copyFailed": "Kopieren nicht möglich",
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
@@ -137,7 +140,7 @@
     "pillMoistPct": "{{pct}} % feucht",
     "pillAms": "AMS {{n}}",
     "list": { "spool": "Spule", "rest": "Rest", "status": "Status" },
-    "detail": { "initial": "Nennmenge", "spoolWeight": "Leergewicht", "diameter": "Durchmesser", "purchasePrice": "Kaufpreis", "labelPrinted": "Etikett gedruckt" },
+    "detail": { "initial": "Nennmenge", "spoolWeight": "Leergewicht", "diameter": "Durchmesser", "purchasePrice": "Kaufpreis", "labelPrinted": "Etikett gedruckt", "color": "Farbe" },
     "form": {
       "missing": "Fehlt noch: {{fields}}",
       "filledCount_other": "{{count}} ausgefüllt",

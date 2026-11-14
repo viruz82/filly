@@ -20,6 +20,9 @@
     "cancel": "Cancel",
     "close": "Close",
     "undo": "Undo",
+    "copy": "Copy",
+    "copied": "Copied: {{value}}",
+    "copyFailed": "Copying not possible",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
@@ -137,7 +140,7 @@
     "pillMoistPct": "{{pct}} % moist",
     "pillAms": "AMS {{n}}",
     "list": { "spool": "Spool", "rest": "Remaining", "status": "Status" },
-    "detail": { "initial": "Nominal weight", "spoolWeight": "Empty spool", "diameter": "Diameter", "purchasePrice": "Purchase price", "labelPrinted": "Label printed" },
+    "detail": { "initial": "Nominal weight", "spoolWeight": "Empty spool", "diameter": "Diameter", "purchasePrice": "Purchase price", "labelPrinted": "Label printed", "color": "Colour" },
     "form": {
       "missing": "Still missing: {{fields}}",
       "filledCount_other": "{{count}} filled in",

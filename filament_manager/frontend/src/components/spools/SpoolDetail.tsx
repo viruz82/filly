@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Droplet, Flame, Scale, Pencil, QrCode, History, Archive, ArchiveRestore, Copy, Trash2, Cloud, Recycle, ChevronDown, ChevronUp } from 'lucide-react'
 import Ring from '../ui/Ring'
+import ColorValue from '../ui/ColorValue'
 import { AmsSlotSelect, useAmsSlotLabel } from '../../hooks/useAmsSlots'
 import { useCurrencyFormatter } from '../../hooks/useHATZ'
 import { formatDateOnly } from '../../utils/time'
@@ -128,6 +129,13 @@ function DetailBody({ spool, spools, lowPct, actions, onClose, sheet }: {
 
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-xs">
         <Row k={t('spools.table.material')}>{spool.material}{subtypes ? ` · ${subtypes}` : ''}</Row>
+        <Row k={t('spools.detail.color')}>
+          <div className="flex flex-col items-end gap-1.5">
+            {[spool.color_hex, spool.color2_hex, spool.color3_hex, spool.color4_hex]
+              .filter((h): h is string => !!h)
+              .map(h => <ColorValue key={h} hex={h} className="justify-end" />)}
+          </div>
+        </Row>
         <Row k={t('spools.detail.initial')}>{fmtNum(spool.initial_weight_g / 1000, 2)} kg</Row>
         <Row k={t('spools.detail.spoolWeight')}>{spool.spool_weight_g ? `${fmtNum(spool.spool_weight_g, 0)} g` : dash}</Row>
         <Row k={t('spools.detail.diameter')}>{fmtNum(spool.diameter_mm, 2)} mm</Row>

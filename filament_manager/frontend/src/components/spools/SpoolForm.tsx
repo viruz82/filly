@@ -6,6 +6,7 @@ import { PACKAGING_TYPES } from '../../types'
 import type { Spool, BrandSpoolWeight, FilamentCatalog, Packaging } from '../../types'
 import { Plus, X } from 'lucide-react'
 import Section from '../ui/Section'
+import ColorValue from '../ui/ColorValue'
 import { useCurrencySymbol } from '../../hooks/useHATZ'
 import { parseDecimal, fmtNum } from '../../utils/number'
 import { AmsSlotSelect } from '../../hooks/useAmsSlots'
@@ -265,6 +266,7 @@ export function SpoolForm({
                 {form.color_hex && !hexOk(form.color_hex) && (
                   <p className="text-xs text-crit mt-1">{t('spools.form.colorHexInvalid')}</p>
                 )}
+                {hexOk(form.color_hex) && <ColorValue hex={form.color_hex} showHex={false} className="mt-1.5" />}
               </div>
             </div>
 
@@ -300,6 +302,7 @@ export function SpoolForm({
                     {form[key] && !hexOk(form[key]) && (
                       <p className="text-xs text-crit mt-1">{t('spools.form.colorHexInvalid')}</p>
                     )}
+                    {form[key] && hexOk(form[key]) && <ColorValue hex={form[key]} showHex={false} className="mt-1.5" />}
                   </div>
                 ))}
               </div>

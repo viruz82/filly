@@ -20,6 +20,9 @@
     "cancel": "Cancelar",
     "close": "Cerrar",
     "undo": "Deshacer",
+    "copy": "Copiar",
+    "copied": "Copiado: {{value}}",
+    "copyFailed": "No se pudo copiar",
     "delete": "Eliminar",
     "edit": "Editar",
     "add": "Añadir",
@@ -137,7 +140,7 @@
     "pillMoistPct": "{{pct}} % húmeda",
     "pillAms": "AMS {{n}}",
     "list": { "spool": "Bobina", "rest": "Restante", "status": "Estado" },
-    "detail": { "initial": "Peso nominal", "spoolWeight": "Peso vacía", "diameter": "Diámetro", "purchasePrice": "Precio de compra", "labelPrinted": "Etiqueta impresa" },
+    "detail": { "initial": "Peso nominal", "spoolWeight": "Peso vacía", "diameter": "Diámetro", "purchasePrice": "Precio de compra", "labelPrinted": "Etiqueta impresa", "color": "Color" },
     "form": {
       "missing": "Falta: {{fields}}",
       "filledCount_other": "{{count}} completados",
