@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.15.0
+
+- **Colour as RGB**: the spool detail shows every colour of a spool as hex **and** as `R / G / B`; the spool form shows the RGB values under the colour picker. Click a value to copy it (`#C2B29A` or `194, 178, 154`) — handy for the colour dialog in Bambu Studio.
+- Fix: the AMS warning "AMS filament not assigned" (dashboard card and `sensor.filament_manager_ams_unmatched`) never cleared for third-party filament such as SUNLU "PLA+ 2.0": the printer reports the basic type ("PLA"), the inventory holds the product line. A spool now fits a tray when its material equals the reported type, equals material + subtype, or its basic type (the first word before a space or "+") equals the reported type; "PLA-CF" still does not fit "PLA". The colour must still match exactly. The same rule is used by the automatic tray matching in Settings.
+- Includes 1.14.2 (menu fix, below).
+
 ## 1.14.2
 
 - Fix: the "..." menu of a spool tile (and of prints and projects) was cut off when it opened upwards, e.g. after a search with a single hit (the first entry "Weigh" was hidden). The menu is now placed from the button's screen position, opens in the preferred direction and flips to the other side when there is not enough room (above the bottom navigation on the phone); it closes on scroll and resize.

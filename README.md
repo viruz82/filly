@@ -2,7 +2,7 @@
 
 A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
 
-![Version](https://img.shields.io/badge/version-1.14.2-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
+![Version](https://img.shields.io/badge/version-1.15.0-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
 
 > **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
 
@@ -69,7 +69,7 @@ Screenshots show demo data, not a real inventory.
 - **AMS filament tracking** — snapshots filament levels at print start/end; calculates grams used per spool per tray; multi-spool prints (runout swaps, AMS auto-switches) are detected
 - **Suggested filament usage** — on print completion the app pre-fills grams used per tray for review; an optional per-printer *auto-deduct* flag applies it immediately
 - **Live print status** — stage, progress, remaining time and active tray from Bambu Cloud MQTT
-- **Spool inventory** — brand, material, subtype, colours (up to 4 for multicolour), article number, weight, tare, price, purchase and storage location, notes; archive instead of delete; weight history per spool
+- **Spool inventory** — brand, material, subtype, colours (up to 4 for multicolour, shown as hex **and** RGB with click-to-copy, e.g. for Bambu Studio), article number, weight, tare, price, purchase and storage location, notes; archive instead of delete; weight history per spool
 - **Weigh from the list** — enter the scale reading, the remaining weight is calculated with the spool's own tare
 - **AMS spool auto-match** and tray assignment from the spool list
 - **Filament catalog** with CSV import/export, brand spool weights, optional Bambu Lab filament sync (experimental)
