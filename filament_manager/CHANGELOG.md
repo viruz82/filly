@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.2
+
+- Fix: the "..." menu of a spool tile (and of prints and projects) was cut off when it opened upwards, e.g. after a search with a single hit (the first entry "Weigh" was hidden). The menu is now placed from the button's screen position, opens in the preferred direction and flips to the other side when there is not enough room (above the bottom navigation on the phone); it closes on scroll and resize.
+
 ## 1.14.1
 
 - Fix: the sort menu on the spools page showed the raw key "spools.sort.material" instead of "Material" (missing translation in de/en/es).
