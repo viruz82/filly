@@ -656,6 +656,14 @@ async def on_cloud_print_start(printer_id: int, subtask_name: str, serial: str, 
         if not display_name:
             display_name = f"Print {datetime.now().strftime('%Y-%m-%d %H:%M')}"
 
+        # Assign sure matches first: the snapshot below decides which spool the grams are booked from.
+        try:
+            from . import ams_autoassign
+            ams_autoassign.run_for_printer(db, printer)
+        except Exception as exc:
+            db.rollback()
+            log.warning("PRINT START [%s]: ams_autoassign failed: %s", printer.name, exc)
+
         # Rich spool snapshot: {slot_key: {spool_id, weight_g, material, color}}
         # Used at print end for swap detection and auto-switch split calculation.
         spool_snap: dict = {}

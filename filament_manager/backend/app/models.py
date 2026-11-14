@@ -326,6 +326,8 @@ class UserPreferences(Base):
     moisture_storage_factors  = Column(JSON(none_as_null=True), nullable=True)
     # Label print profiles: [{"name": str, "settings": {...}}] (frontend-defined settings)
     label_profiles            = Column(JSON(none_as_null=True), nullable=True)
+    # Silent AMS assignments: [{"id","at","printer_id","printer","slot_key","spool_id","label","color","material","state"}]
+    ams_auto_log              = Column(JSON(none_as_null=True), nullable=True)
     # Bambu Filament Sync settings
     # sync_mode: 'off' | 'pull' | 'push' | 'bidirectional'
     # Stored in bambu_filament_sync_direction for DB compat; bambu_filament_sync_enabled is legacy.

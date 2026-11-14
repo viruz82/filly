@@ -437,6 +437,12 @@ async def push_now() -> None:
 
     try:
         with SessionLocal() as db:
+            try:
+                from . import ams_autoassign
+                ams_autoassign.run(db)      # silent slot assignment for sure matches
+            except Exception as exc:        # never block the sensor push
+                db.rollback()
+                log.warning("ams_autoassign failed: %s", exc, exc_info=True)
             values = _compute(db)
     except Exception as exc:
         log.warning("ha_publisher: _compute failed: %s", exc, exc_info=True)

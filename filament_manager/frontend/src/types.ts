@@ -296,6 +296,19 @@ export interface FilamentCatalog {
   updated_at: string
 }
 
+export interface AmsAutoEntry {
+  id: string
+  at: string
+  printer_id: number
+  printer: string
+  slot_key: string
+  spool_id: number
+  label: string
+  color: string | null
+  material: string | null
+  state: 'new' | 'seen' | 'undone'
+}
+
 export interface AMSTray {
   slot_key: string
   ams_id: number

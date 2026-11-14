@@ -108,6 +108,9 @@ export const api = {
     request<void>(`printers/${id}`, { method: 'DELETE' }),
   getPrinterStatus: (id: number) =>
     request<PrinterStatus>(`printers/${id}/status`),
+  getAmsAutoLog: () => request<import('./types').AmsAutoEntry[]>('ams-auto'),
+  undoAmsAuto: (id: string) => request<import('./types').AmsAutoEntry>(`ams-auto/${id}/undo`, { method: 'POST' }),
+  dismissAmsAuto: (id: string) => request<import('./types').AmsAutoEntry>(`ams-auto/${id}/dismiss`, { method: 'POST' }),
   getPrinterAMS: (id: number) =>
     request<import('./types').AMSTray[]>(`printers/${id}/ams`),
   assignAMSTray: (printerId: number, slotKey: string, spoolId: number | null) =>

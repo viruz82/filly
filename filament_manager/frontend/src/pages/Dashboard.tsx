@@ -193,6 +193,46 @@ function PrintRow({ job }: { job: PrintJob }) {
 
 // ── AMS mismatch alert ────────────────────────────────────────────────────────
 
+function AmsAutoCard() {
+  const { t } = useTranslation()
+  const qc = useQueryClient()
+  const { data: entries = [] } = useQuery({
+    queryKey: ['ams-auto'],
+    queryFn: () => api.getAmsAutoLog(),
+    refetchInterval: 30_000,
+  })
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['ams-auto'] })
+    qc.invalidateQueries({ queryKey: ['printer-ams'] })
+    qc.invalidateQueries({ queryKey: ['spools'] })
+  }
+  const undoMut = useMutation({ mutationFn: (id: string) => api.undoAmsAuto(id), onSuccess: refresh })
+  const okMut = useMutation({ mutationFn: (id: string) => api.dismissAmsAuto(id), onSuccess: refresh })
+
+  const fresh = entries.filter(e => e.state === 'new')
+  if (fresh.length === 0) return null
+
+  return (
+    <div className="card border border-ok/40 bg-ok/10">
+      <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+        <CheckCircle2 size={14} className="text-ok" /> {t('dashboard.amsAutoCard')}
+      </h3>
+      {fresh.map(e => (
+        <div key={e.id} className="flex items-center gap-2 py-1.5 border-b border-ok/30 last:border-0">
+          <span className="w-3 h-3 rounded-full shrink-0 border border-white/20" style={{ background: e.color ?? '#888' }} />
+          <p className="text-xs text-white min-w-0 flex-1 truncate">
+            {t('dashboard.amsAutoLine', { spool: e.label, slot: e.slot_key.replace(/ams(\d+)_tray(\d+)/, 'AMS $1 · T$2') })}
+          </p>
+          <button type="button" className="btn bg-surface-3 hover:bg-surface-4 text-xs shrink-0"
+            disabled={undoMut.isPending} onClick={() => undoMut.mutate(e.id)}>{t('common.undo')}</button>
+          <button type="button" className="btn bg-surface-3 hover:bg-surface-4 text-xs shrink-0"
+            disabled={okMut.isPending} onClick={() => okMut.mutate(e.id)}>{t('dashboard.amsAutoOk')}</button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 interface AmsRow { tr: AMSTray; kind: 'mismatch' | 'suggest'; candidates: SpoolCandidate[] }
 
 function AMSPrinterAlert({ printer, spools }: { printer: PrinterConfig; spools: Spool[] }) {
@@ -323,6 +363,8 @@ export default function Dashboard() {
       {stats.running_job && (
         <RunningJobCard job={stats.running_job} printers={printers} />
       )}
+
+      <AmsAutoCard />
 
       {/* AMS mismatch warnings — one card per printer with unmatched trays */}
       {cloudPrinters.map(p => (
