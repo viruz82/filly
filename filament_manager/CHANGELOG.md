@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.16.1
+
+- **Silent spool assignment for AMS slots**: printing books the grams from the spool assigned to the slot when the print starts, and a slot without a spool got no booking (0 g). The add-on now assigns a spool by itself at print start and every 30 seconds when the match is sure: the slot has no spool, exactly one active spool fits the reported material and colour, that colour is very close (distance up to 3) and the spool is not in another slot. Everything else stays a question on the dashboard.
+- **Dashboard card "Assigned automatically"** lists what was assigned, with **Undo** (takes the spool out of the slot again) and **OK**. An undone, dismissed or later removed assignment is never repeated for the same slot, spool and reported colour.
+- New: `GET /api/ams-auto`, `POST /api/ams-auto/{id}/undo`, `POST /api/ams-auto/{id}/dismiss`; log in `user_preferences.ams_auto_log` (column added automatically).
+- Tests: 461 backend tests (12 new for the assignment and undo rules).
+
 ## 1.16.0
 
 - **AMS slots are recognised more like a human would**: the colour is compared by perceptual distance (CIE76 ΔE ≤ 10 in Lab space) instead of exact hex equality, because the colour set at the AMS slot for third-party filament is never exactly the inventory colour. Used by the dashboard card, the automatic tray matching in Settings and `sensor.filament_manager_ams_unmatched` (same rule in the browser and in the add-on).
