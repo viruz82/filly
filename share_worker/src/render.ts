@@ -1,5 +1,6 @@
-// Server-rendered public pages. No JavaScript, no external resources:
-// everything a visitor gets is in this one HTML response.
+// Server-rendered public pages. No external resources, no cookies. The collection
+// page carries ONE small inline script (search and filters); the page is fully
+// readable without it, and the Content-Security-Policy only allows exactly that script.
 
 import type { Lang, PublicSpool, Snapshot } from './sanitize'
 
@@ -15,6 +16,11 @@ interface Texts {
   notFoundTitle: string
   notFound: string
   pct: (n: number) => string
+  stat: { spools: string; weight: string; colors: string; brands: string }
+  search: string
+  allMaterials: string
+  allBrands: string
+  noResults: string
 }
 
 const T: Record<Lang, Texts> = {
@@ -30,6 +36,11 @@ const T: Record<Lang, Texts> = {
     notFoundTitle: 'Link nicht verfügbar',
     notFound: 'Dieser Link ist ungültig, abgelaufen oder wurde abgeschaltet.',
     pct: (n) => `${n} %`,
+    stat: { spools: 'Spulen', weight: 'Gesamtgewicht', colors: 'Farben', brands: 'Hersteller' },
+    search: 'Suche nach Farbe, Hersteller, Nummer …',
+    allMaterials: 'Alle Materialien',
+    allBrands: 'Alle Hersteller',
+    noResults: 'Nichts gefunden.',
   },
   en: {
     locale: 'en-GB',
@@ -43,6 +54,11 @@ const T: Record<Lang, Texts> = {
     notFoundTitle: 'Link not available',
     notFound: 'This link is invalid, has expired or was switched off.',
     pct: (n) => `${n}%`,
+    stat: { spools: 'Spools', weight: 'Total weight', colors: 'Colours', brands: 'Brands' },
+    search: 'Search colour, brand, number …',
+    allMaterials: 'All materials',
+    allBrands: 'All brands',
+    noResults: 'Nothing found.',
   },
   es: {
     locale: 'es-ES',
@@ -56,6 +72,11 @@ const T: Record<Lang, Texts> = {
     notFoundTitle: 'Enlace no disponible',
     notFound: 'Este enlace no es válido, ha caducado o se ha desactivado.',
     pct: (n) => `${n} %`,
+    stat: { spools: 'Bobinas', weight: 'Peso total', colors: 'Colores', brands: 'Marcas' },
+    search: 'Buscar color, marca, número …',
+    allMaterials: 'Todos los materiales',
+    allBrands: 'Todas las marcas',
+    noResults: 'No se encontró nada.',
   },
 }
 
@@ -96,38 +117,61 @@ export function swatch(s: PublicSpool): string {
 }
 
 const CSS = `
-:root{color-scheme:light dark;--bg:#f2f4f7;--card:#fff;--line:#e2e6ec;--text:#111827;--muted:#5b6472;--accent:#0288d1;--ok:#15803d;--warn:#b45309;--crit:#c62828;--track:#e2e6ec}
-@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1c1f26;--line:#262a33;--text:#e3e6ec;--muted:#9aa3b2;--accent:#03a9f4;--ok:#8fdc92;--warn:#ffc163;--crit:#ff8a87;--track:#30353f}}
+:root{color-scheme:light dark;--bg:#f2f4f7;--card:#fff;--line:#e2e6ec;--text:#111827;--muted:#5b6472;--accent:#0288d1;--ok:#15803d;--warn:#b45309;--crit:#c62828;--track:#e2e6ec;--chip:#eef1f5}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1c1f26;--line:#262a33;--text:#e3e6ec;--muted:#9aa3b2;--accent:#03a9f4;--ok:#8fdc92;--warn:#ffc163;--crit:#ff8a87;--track:#30353f;--chip:#262a33}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:1100px;margin:0 auto;padding:20px 16px 32px}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 32px}
 header h1{margin:0;font-size:1.5rem;line-height:1.2;overflow-wrap:anywhere}
 .sub{color:var(--muted);margin:4px 0 0;font-size:.9rem}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0;padding:0;list-style:none}
-.chips li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:.85rem}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;margin:18px 0 0;padding:0;list-style:none}
+.stats li{min-width:0}
+.stats b{display:block;font-size:1.7rem;line-height:1.1;color:var(--accent)}
+.stats span{color:var(--muted);font-size:.8rem}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.tools input,.tools select{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0;max-width:100%}
+.tools input{flex:1 1 220px}
+.tools select{flex:0 1 190px}
 section{margin-top:24px}
 h2{font-size:1rem;margin:0 0 10px;color:var(--muted);font-weight:600;letter-spacing:.02em}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:0;padding:0;list-style:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.top{display:flex;gap:10px;align-items:center;min-width:0}
-.sw{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid rgba(127,127,127,.35)}
+.top{display:flex;gap:12px;align-items:center;min-width:0}
+.sw{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(127,127,127,.35)}
 .txt{min-width:0}
 .name{font-weight:600;overflow-wrap:anywhere}
-.meta{color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
-.badge{align-self:flex-start;font-size:.72rem;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted)}
+.no{color:var(--accent);margin-right:4px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.badge{font-size:.72rem;border:1px solid var(--line);background:var(--chip);border-radius:6px;padding:0 7px;color:var(--text);overflow-wrap:anywhere}
+.meta{color:var(--muted);font-size:.82rem;overflow-wrap:anywhere;margin-top:2px}
+.amt{font-size:.95rem}
+.amt b{font-size:1.05rem}
+.amt span{color:var(--muted);font-size:.82rem}
 .bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:3px}
-.pct{font-size:.82rem;color:var(--muted);text-align:right;margin-top:-4px}
 .none{color:var(--muted)}
 footer{margin-top:32px;color:var(--muted);font-size:.8rem;text-align:center}
-@media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:10px}.sw{width:34px;height:34px}}
+@media (max-width:520px){.tools input{flex:1 1 100%}.tools select{flex:1 1 calc(50% - 4px)}}
 `
 
-function page(lang: Lang, title: string, body: string): string {
+/** The only script on the page. Filters cards in place; without it everything stays visible. */
+export const PAGE_SCRIPT =
+  "(function(){var b=document.getElementById('tools');if(!b)return;" +
+  "var q=document.getElementById('q'),m=document.getElementById('fm'),v=document.getElementById('fb')," +
+  "no=document.getElementById('nores'),cards=[].slice.call(document.querySelectorAll('.card'))," +
+  "secs=[].slice.call(document.querySelectorAll('section'));" +
+  "function run(){var t=q.value.trim().toLowerCase(),mv=m.value,bv=v.value,n=0;" +
+  "cards.forEach(function(c){var ok=(!t||c.getAttribute('data-q').indexOf(t)>-1)&&(!mv||c.getAttribute('data-m')===mv)&&(!bv||c.getAttribute('data-b')===bv);c.hidden=!ok;if(ok)n++});" +
+  "secs.forEach(function(s){var k=s.querySelectorAll('.card:not([hidden])').length;s.hidden=!k;var c=s.querySelector('.n');if(c)c.textContent=k});" +
+  "no.hidden=n>0}" +
+  "b.addEventListener('input',run);b.addEventListener('change',run);b.hidden=false})();"
+
+function page(lang: Lang, title: string, body: string, script = ''): string {
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">` +
     `<meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer">` +
-    `<title>${esc(title)}</title><style>${CSS}</style></head><body>${body}</body></html>`
+    `<title>${esc(title)}</title><style>${CSS}</style></head><body>${body}${script ? `<script>${script}</script>` : ''}</body></html>`
 }
 
 function formatTime(iso: string, t: Texts, tz: string): string {
@@ -142,49 +186,85 @@ export interface PageLink {
   name: string
   hide_empty: boolean
   lang: Lang
+  /** Show only these brands / materials; an empty list means no filter on that field. */
+  brands: string[]
+  materials: string[]
+  /** Show grams (remaining / nominal) instead of only the percentage. */
+  show_weight: boolean
+}
+
+/** Spools this link is allowed to show: link filters first, then "hide empty". */
+export function visibleSpools(link: PageLink, snap: Snapshot | null): PublicSpool[] {
+  const brands = new Set(link.brands.map((b) => b.toLowerCase()))
+  const materials = new Set(link.materials.map((m) => m.toLowerCase()))
+  return (snap?.spools ?? []).filter((s) =>
+    (!brands.size || brands.has(s.brand.toLowerCase())) &&
+    (!materials.size || materials.has(s.material.toLowerCase())) &&
+    (!link.hide_empty || s.remaining_pct > 0))
 }
 
 export function renderCollection(link: PageLink, snap: Snapshot | null, tz: string): string {
   const t = T[link.lang]
-  const all = snap?.spools ?? []
-  const spools = link.hide_empty ? all.filter((s) => s.remaining_pct > 0) : all
+  const spools = visibleSpools(link, snap)
   const coll = new Intl.Collator(t.locale, { sensitivity: 'base', numeric: true })
+  const num = new Intl.NumberFormat(t.locale)
   const byMaterial = new Map<string, PublicSpool[]>()
   for (const s of spools) {
-    const key = s.material
-    const list = byMaterial.get(key)
+    const list = byMaterial.get(s.material)
     if (list) list.push(s)
-    else byMaterial.set(key, [s])
+    else byMaterial.set(s.material, [s])
   }
   const materials = [...byMaterial.keys()].sort(coll.compare)
+  const brands = [...new Set(spools.map((s) => s.brand).filter(Boolean))].sort(coll.compare)
 
   const card = (s: PublicSpool) => {
     const level = s.remaining_pct <= (snap?.empty_pct ?? 8) ? 'crit' : s.remaining_pct <= (snap?.low_pct ?? 20) ? 'warn' : 'ok'
-    const kind = s.color_mode === 'special' && s.color_effect ? t.effects[s.color_effect]
-      : t.modes[s.color_mode]
-    const meta = [s.brand, s.subtype].filter(Boolean).join(' · ')
-    return `<li class="card"><div class="top"><span class="sw" style="background:${swatch(s)}"></span>` +
-      `<div class="txt"><div class="name">${esc(s.color_name || s.colors[0])}</div>` +
-      (meta ? `<div class="meta">${esc(meta)}</div>` : '') + `</div></div>` +
-      (kind ? `<span class="badge">${esc(kind)}</span>` : '') +
-      `<div class="bar"><i style="width:${s.remaining_pct}%;background:var(--${level})"></i></div>` +
-      `<div class="pct">${t.pct(s.remaining_pct)}</div></li>`
+    const kind = s.color_mode === 'special' && s.color_effect ? t.effects[s.color_effect] : t.modes[s.color_mode]
+    const name = s.color_name || s.colors[0]
+    const tags = [s.subtype, kind].filter(Boolean).map((x) => `<span class="badge">${esc(x!)}</span>`).join('')
+    const amount = link.show_weight
+      ? `<b>${num.format(s.weight_g)} g</b> <span>/ ${num.format(s.spool_g)} g</span>`
+      : `<b>${t.pct(s.remaining_pct)}</b>`
+    const search = [s.number ? `#${s.number}` : '', name, s.brand, s.material, s.subtype ?? ''].join(' ').toLowerCase()
+    return `<li class="card" data-q="${esc(search)}" data-m="${esc(s.material)}" data-b="${esc(s.brand)}">` +
+      `<div class="top"><span class="sw" style="background:${swatch(s)}"></span>` +
+      `<div class="txt"><div class="name">${s.number ? `<span class="no">#${s.number}</span>` : ''}${esc(name)}</div>` +
+      (tags ? `<div class="tags">${tags}</div>` : '') +
+      (s.brand ? `<div class="meta">${esc(s.brand)}</div>` : '') + `</div></div>` +
+      `<div class="amt">${amount}</div>` +
+      `<div class="bar"><i style="width:${s.remaining_pct}%;background:var(--${level})"></i></div></li>`
   }
 
   const sections = materials.map((m) => {
     const list = byMaterial.get(m)!.sort((a, b) =>
       coll.compare(a.brand, b.brand) || coll.compare(a.color_name, b.color_name) || b.remaining_pct - a.remaining_pct)
-    return `<section><h2>${esc(m)} · ${list.length}</h2><ul class="grid">${list.map(card).join('')}</ul></section>`
+    return `<section><h2>${esc(m)} · <span class="n">${list.length}</span></h2><ul class="grid">${list.map(card).join('')}</ul></section>`
   }).join('')
 
-  const chips = materials.map((m) => `<li>${esc(m)} ${byMaterial.get(m)!.length}</li>`).join('')
+  const colors = new Set(spools.map((s) => (s.color_name || s.colors[0]).toLowerCase())).size
+  const totalKg = spools.reduce((n, s) => n + s.weight_g, 0) / 1000
+  const stats: string[] = [`<li><b>${spools.length}</b><span>${t.stat.spools}</span></li>`]
+  if (link.show_weight) {
+    stats.push(`<li><b>${new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 }).format(totalKg)} kg</b><span>${t.stat.weight}</span></li>`)
+  }
+  stats.push(`<li><b>${colors}</b><span>${t.stat.colors}</span></li>`, `<li><b>${brands.length}</b><span>${t.stat.brands}</span></li>`)
+
+  const options = (all: string, list: string[]) =>
+    `<option value="">${esc(all)}</option>` + list.map((x) => `<option value="${esc(x)}">${esc(x)}</option>`).join('')
+  const tools = spools.length
+    ? `<div class="tools" id="tools" hidden><input id="q" type="search" placeholder="${esc(t.search)}" autocomplete="off" aria-label="${esc(t.search)}">` +
+      `<select id="fm" aria-label="${esc(t.allMaterials)}">${options(t.allMaterials, materials)}</select>` +
+      `<select id="fb" aria-label="${esc(t.allBrands)}">${options(t.allBrands, brands)}</select></div>`
+    : ''
+
   const updated = snap ? `${t.updated}: ${esc(formatTime(snap.generated_at, t, tz))}` : ''
   const body = `<main><header><h1>${esc(link.name)}</h1>` +
     `<p class="sub">${t.spools(spools.length)}${updated ? ' · ' + updated : ''}</p>` +
-    (chips ? `<ul class="chips">${chips}</ul>` : '') + `</header>` +
+    (spools.length ? `<ul class="stats">${stats.join('')}</ul>` : '') + tools + `</header>` +
     (sections || `<p class="none">${t.none}</p>`) +
+    `<p class="none" id="nores" hidden>${t.noResults}</p>` +
     `<footer>${t.footer}</footer></main>`
-  return page(link.lang, `${link.name} · ${t.title}`, body)
+  return page(link.lang, `${link.name} · ${t.title}`, body, spools.length ? PAGE_SCRIPT : '')
 }
 
 export function renderNotFound(lang: Lang): string {

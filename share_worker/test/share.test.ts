@@ -1,6 +1,6 @@
 import { SELF, reset } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { cleanSnapshot, cleanSpool, newLinkId, LINK_ID_RE } from '../src/sanitize'
+import { cleanLinkInput, cleanLinkPatch, cleanList, cleanSnapshot, cleanSpool, newLinkId, LINK_ID_RE } from '../src/sanitize'
 import { esc, swatch } from '../src/render'
 
 const KEY = 'test-push-key-0123456789abcdef0123456789'
@@ -14,8 +14,9 @@ function api(path: string, init: RequestInit = {}, key: string | null = KEY) {
 }
 
 const spool = (over: Record<string, unknown> = {}) => ({
-  brand: 'SUNLU', material: 'PLA', subtype: 'Matte', color_name: 'Mint Green',
-  colors: ['#00C7B1'], color_mode: 'solid', color_effect: null, remaining_pct: 55, ...over,
+  number: 38, brand: 'SUNLU', material: 'PLA', subtype: 'Matte', color_name: 'Mint Green',
+  colors: ['#00C7B1'], color_mode: 'solid', color_effect: null, remaining_pct: 55,
+  weight_g: 550, spool_g: 1000, ...over,
 })
 
 async function pushSnapshot(spools: unknown[], extra: Record<string, unknown> = {}) {
@@ -43,7 +44,27 @@ describe('sanitize', () => {
       purchase_location: 'Amazon', current_weight_g: 512, id: 7, custom_id: 12, ams_slot: 'A1',
     })
     expect(Object.keys(s!).sort()).toEqual(
-      ['brand', 'color_effect', 'color_mode', 'color_name', 'colors', 'material', 'remaining_pct', 'subtype'])
+      ['brand', 'color_effect', 'color_mode', 'color_name', 'colors', 'material', 'number', 'remaining_pct',
+        'spool_g', 'subtype', 'weight_g'])
+    expect(s!.number).toBe(38)
+  })
+
+  it('bounds numbers and grams', () => {
+    expect(cleanSpool(spool({ weight_g: -5, spool_g: 'x', number: 'a' }))).toMatchObject({ weight_g: 0, spool_g: 0, number: 0 })
+    expect(cleanSpool(spool({ weight_g: 549.6, number: 12.9 }))).toMatchObject({ weight_g: 550, number: 12 })
+    expect(cleanSpool(spool({ weight_g: 1e12 }))!.weight_g).toBe(100_000)
+  })
+
+  it('cleans filter lists', () => {
+    expect(cleanList(['SUNLU', 'sunlu', '  Bambu  Lab ', '', 7, null])).toEqual(['SUNLU', 'Bambu Lab'])
+    expect(cleanList('SUNLU')).toBeUndefined()
+    expect(cleanList(new Array(81).fill('x'))).toBeUndefined()
+    expect(cleanList(Array.from({ length: 60 }, (_, i) => `m${i}`))).toHaveLength(40)
+    expect(cleanLinkInput({ name: 'x', brands: 'SUNLU' })).toBe('bad_brands')
+    expect(cleanLinkInput({ name: 'x', materials: {} })).toBe('bad_materials')
+    expect(cleanLinkInput({ name: 'x' })).toMatchObject({ brands: [], materials: [], show_weight: true })
+    expect(cleanLinkPatch({ show_weight: 'ja' })).toBe('bad_show_weight')
+    expect(cleanLinkPatch({ brands: ['A'] })).toEqual({ brands: ['A'] })
   })
 
   it('validates colours, modes and effects', () => {
@@ -124,7 +145,9 @@ describe('public page', () => {
     expect(html).toContain('Mint Green')
     expect(html).toContain('Kais &lt;Spulen&gt;')
     expect(html).toContain('&lt;script&gt;alert(1)')
-    expect(html.toLowerCase()).not.toContain('<' + 'script')
+    // exactly ONE script (ours), and the policy lets exactly that script run
+    expect(html.toLowerCase().split('<' + 'script').length - 1).toBe(1)
+    expect(r.headers.get('content-security-policy')).toMatch(/script-src 'sha256-[A-Za-z0-9+/=]+'/)
     expect(html).not.toContain('Regal 3')
     expect(html).not.toContain('19.99')
     expect(html).not.toContain('geheim')
@@ -141,6 +164,68 @@ describe('public page', () => {
     const html = await (await SELF.fetch(`${BASE}/s/${link.id}`)).text()
     expect(html).toContain('Voll')
     expect(html).not.toContain('Leer')
+  })
+
+  it('shows number, search tools and stats', async () => {
+    await pushSnapshot([spool(), spool({ number: 41, color_name: 'Rot', brand: 'Bambu Lab', material: 'PETG', weight_g: 250 })])
+    const link = await createLink({ name: 'x' })
+    const html = await (await SELF.fetch(`${BASE}/s/${link.id}`)).text()
+    expect(html).toContain('#38')
+    expect(html).toContain('#41')
+    expect(html).toContain('id="q"')
+    expect(html).toContain('<option value="PETG">PETG</option>')
+    expect(html).toContain('<option value="Bambu Lab">Bambu Lab</option>')
+    expect(html).toContain('0,8 kg')                    // (550 + 250) g
+    expect(html).toContain('data-q="#41 rot bambu lab petg matte"')
+  })
+
+  it('shows grams only when the link allows it', async () => {
+    await pushSnapshot([spool()])
+    const withGrams = await createLink({ name: 'mit', show_weight: true })
+    const percentOnly = await createLink({ name: 'ohne', show_weight: false })
+    const a = await (await SELF.fetch(`${BASE}/s/${withGrams.id}`)).text()
+    const b = await (await SELF.fetch(`${BASE}/s/${percentOnly.id}`)).text()
+    expect(a).toContain('550 g')
+    expect(a).toContain('/ 1.000 g')
+    expect(b).not.toContain('550 g')
+    expect(b).not.toContain('1.000 g')
+    expect(b).not.toContain(' kg')
+    expect(b).toContain('55 %')
+    await api(`/api/links/${percentOnly.id}`, { method: 'PATCH', body: JSON.stringify({ show_weight: true }) })
+    expect(await (await SELF.fetch(`${BASE}/s/${percentOnly.id}`)).text()).toContain('550 g')
+  })
+
+  it('filters by brand and material before anything is rendered', async () => {
+    await pushSnapshot([
+      spool({ number: 1, color_name: 'SunluPla' }),
+      spool({ number: 2, color_name: 'SunluPetg', material: 'PETG' }),
+      spool({ number: 3, color_name: 'BambuPla', brand: 'Bambu Lab' }),
+      spool({ number: 4, color_name: 'EsunPla', brand: 'eSUN' }),
+    ])
+    const link = await createLink({ name: 'f', brands: ['sunlu', 'Bambu Lab'], materials: ['PLA'] })
+    const html = await (await SELF.fetch(`${BASE}/s/${link.id}`)).text()
+    expect(html).toContain('SunluPla')
+    expect(html).toContain('BambuPla')
+    expect(html).not.toContain('SunluPetg')            // wrong material
+    expect(html).not.toContain('EsunPla')              // wrong brand
+    expect(html).not.toContain('eSUN')                 // not even in the drop-down
+
+    const listed = await (await api('/api/links')).json() as { links: { brands: string[]; materials: string[]; show_weight: boolean }[] }
+    expect(listed.links[0]).toMatchObject({ brands: ['sunlu', 'Bambu Lab'], materials: ['PLA'], show_weight: true })
+
+    await api(`/api/links/${link.id}`, { method: 'PATCH', body: JSON.stringify({ brands: [], materials: [] }) })
+    const all = await (await SELF.fetch(`${BASE}/s/${link.id}`)).text()
+    expect(all).toContain('EsunPla')
+    expect(all).toContain('SunluPetg')
+  })
+
+  it('filter and hide-empty work together and an empty result is friendly', async () => {
+    await pushSnapshot([spool({ remaining_pct: 0, weight_g: 0, color_name: 'Leer' })])
+    const link = await createLink({ name: 'e', materials: ['PLA'], hide_empty: true })
+    const html = await (await SELF.fetch(`${BASE}/s/${link.id}`)).text()
+    expect(html).not.toContain('Leer')
+    expect(html).toContain('Keine Spulen vorhanden.')
+    expect(html.toLowerCase()).not.toContain('<' + 'script')
   })
 
   it('answers unknown, inactive and expired links the same way', async () => {
@@ -184,6 +269,9 @@ describe('public page', () => {
     const l = await createLink({ name: 'x' })
     expect((await api(`/api/links/${l.id}`, { method: 'PATCH', body: '{"active":"ja"}' })).status).toBe(400)
     expect((await api(`/api/links/${l.id}`, { method: 'PATCH', body: '{"lang":"fr"}' })).status).toBe(400)
+    expect((await api(`/api/links/${l.id}`, { method: 'PATCH', body: '{"brands":"SUNLU"}' })).status).toBe(400)
+    expect((await api(`/api/links/${l.id}`, { method: 'PATCH', body: '{"show_weight":"ja"}' })).status).toBe(400)
+    expect((await api('/api/links', { method: 'POST', body: '{"name":"x","materials":5}' })).status).toBe(400)
     for (let i = 0; i < 19; i++) await createLink({ name: `l${i}` })
     expect((await api('/api/links', { method: 'POST', body: '{"name":"zu viel"}' })).status).toBe(409)
   })

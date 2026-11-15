@@ -2,7 +2,7 @@
 // under unguessable links. Filly pushes the copy (Bearer key); visitors only read.
 
 import { DurableObject } from 'cloudflare:workers'
-import { pickLang, renderCollection, renderNotFound, type PageLink } from './render'
+import { PAGE_SCRIPT, pickLang, renderCollection, renderNotFound, type PageLink } from './render'
 import {
   LINK_ID_RE, MAX_BODY_BYTES, MAX_LINKS,
   cleanLinkInput, cleanLinkPatch, cleanSnapshot, newLinkId,
@@ -24,6 +24,9 @@ export interface LinkRow {
   expires_at: string | null
   hide_empty: boolean
   lang: Lang
+  brands: string[]
+  materials: string[]
+  show_weight: boolean
   views: number
   last_view_at: string | null
   created_at: string
@@ -38,6 +41,15 @@ export interface LinkList {
 
 type Row = Record<string, SqlStorageValue>
 
+function list(v: SqlStorageValue): string[] {
+  try {
+    const a = JSON.parse(String(v ?? '[]'))
+    return Array.isArray(a) ? a.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
 function toLink(r: Row): LinkRow {
   return {
     id: String(r.id),
@@ -46,6 +58,9 @@ function toLink(r: Row): LinkRow {
     expires_at: r.expires_at === null ? null : String(r.expires_at),
     hide_empty: r.hide_empty === 1,
     lang: String(r.lang) as Lang,
+    brands: list(r.brands),
+    materials: list(r.materials),
+    show_weight: r.show_weight !== 0,
     views: Number(r.views),
     last_view_at: r.last_view_at === null ? null : String(r.last_view_at),
     created_at: String(r.created_at),
@@ -69,6 +84,11 @@ export class ShareStore extends DurableObject<Env> {
       id TEXT PRIMARY KEY, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1,
       expires_at TEXT, hide_empty INTEGER NOT NULL DEFAULT 1, lang TEXT NOT NULL DEFAULT 'de',
       views INTEGER NOT NULL DEFAULT 0, last_view_at TEXT, created_at TEXT NOT NULL)`)
+    // 1.21.0: filters and weight switch. Links from 1.20.0 keep showing everything, as before.
+    const have = new Set(this.sql.exec('PRAGMA table_info(links)').toArray().map((c) => String(c.name)))
+    if (!have.has('brands')) this.sql.exec(`ALTER TABLE links ADD COLUMN brands TEXT NOT NULL DEFAULT '[]'`)
+    if (!have.has('materials')) this.sql.exec(`ALTER TABLE links ADD COLUMN materials TEXT NOT NULL DEFAULT '[]'`)
+    if (!have.has('show_weight')) this.sql.exec(`ALTER TABLE links ADD COLUMN show_weight INTEGER NOT NULL DEFAULT 0`)
   }
 
   private readSnapshot(): { snap: Snapshot; received_at: string } | null {
@@ -106,9 +126,11 @@ export class ShareStore extends DurableObject<Env> {
     if (count >= MAX_LINKS) return null
     const id = newLinkId()
     this.sql.exec(
-      `INSERT INTO links (id, name, active, expires_at, hide_empty, lang, views, created_at)
-       VALUES (?, ?, 1, ?, ?, ?, 0, ?)`,
-      id, input.name, input.expires_at, input.hide_empty ? 1 : 0, input.lang, new Date().toISOString())
+      `INSERT INTO links (id, name, active, expires_at, hide_empty, lang, brands, materials, show_weight, views, created_at)
+       VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, 0, ?)`,
+      id, input.name, input.expires_at, input.hide_empty ? 1 : 0, input.lang,
+      JSON.stringify(input.brands), JSON.stringify(input.materials), input.show_weight ? 1 : 0,
+      new Date().toISOString())
     return this.getLink(id)
   }
 
@@ -121,6 +143,9 @@ export class ShareStore extends DurableObject<Env> {
     if (patch.hide_empty !== undefined) { sets.push('hide_empty = ?'); vals.push(patch.hide_empty ? 1 : 0) }
     if (patch.active !== undefined) { sets.push('active = ?'); vals.push(patch.active ? 1 : 0) }
     if (patch.lang !== undefined) { sets.push('lang = ?'); vals.push(patch.lang) }
+    if (patch.brands !== undefined) { sets.push('brands = ?'); vals.push(JSON.stringify(patch.brands)) }
+    if (patch.materials !== undefined) { sets.push('materials = ?'); vals.push(JSON.stringify(patch.materials)) }
+    if (patch.show_weight !== undefined) { sets.push('show_weight = ?'); vals.push(patch.show_weight ? 1 : 0) }
     if (sets.length) this.sql.exec(`UPDATE links SET ${sets.join(', ')} WHERE id = ?`, ...vals, id)
     return this.getLink(id)
   }
@@ -150,7 +175,10 @@ export class ShareStore extends DurableObject<Env> {
       this.sql.exec('UPDATE links SET views = views + 1, last_view_at = ? WHERE id = ?', now.toISOString(), id)
     }
     return {
-      link: { name: link.name, hide_empty: link.hide_empty, lang: link.lang },
+      link: {
+        name: link.name, hide_empty: link.hide_empty, lang: link.lang,
+        brands: link.brands, materials: link.materials, show_weight: link.show_weight,
+      },
       snapshot: this.readSnapshot()?.snap ?? null,
     }
   }
@@ -169,6 +197,17 @@ const PAGE_HEADERS: Record<string, string> = {
   'content-security-policy':
     "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+}
+
+/** The collection page carries one small inline script (search + filters); only exactly that script may run. */
+let collectionCsp: Promise<string> | null = null
+async function collectionHeaders(): Promise<Record<string, string>> {
+  collectionCsp ??= sha256(PAGE_SCRIPT).then((d) => {
+    let bin = ''
+    for (const b of new Uint8Array(d)) bin += String.fromCharCode(b)
+    return PAGE_HEADERS['content-security-policy'].replace('default-src \'none\';', `default-src 'none'; script-src 'sha256-${btoa(bin)}';`)
+  })
+  return { ...PAGE_HEADERS, 'content-security-policy': await collectionCsp }
 }
 
 function json(body: unknown, status = 200): Response {
@@ -270,7 +309,7 @@ export default {
       const hit = await store().view(share[1], req.method === 'GET')
       if (!hit) return notFoundPage(req)
       const body = req.method === 'HEAD' ? null : renderCollection(hit.link, hit.snapshot, env.TZ || 'Europe/Berlin')
-      return new Response(body, { status: 200, headers: PAGE_HEADERS })
+      return new Response(body, { status: 200, headers: await collectionHeaders() })
     }
 
     if (path === '/api' || path.startsWith('/api/')) {

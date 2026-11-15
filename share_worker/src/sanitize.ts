@@ -16,7 +16,11 @@ export type Lang = typeof LANGS[number]
 export const LINK_ID_RE = /^[A-Za-z0-9_-]{22}$/
 const HEX_RE = /^#?([0-9a-fA-F]{6})$/
 
+export const MAX_FILTER_ITEMS = 40
+
 export interface PublicSpool {
+  /** The spool number in Filly, so someone can say "print with #38". */
+  number: number
   brand: string
   material: string
   subtype: string | null
@@ -25,6 +29,9 @@ export interface PublicSpool {
   color_mode: string
   color_effect: string | null
   remaining_pct: number
+  /** Remaining and nominal filament weight in grams; shown only when the link allows it. */
+  weight_g: number
+  spool_g: number
 }
 
 export interface Snapshot {
@@ -39,6 +46,10 @@ export interface LinkInput {
   expires_at: string | null
   hide_empty: boolean
   lang: Lang
+  /** Only these brands / materials are shown (empty list = no filter on that field). */
+  brands: string[]
+  materials: string[]
+  show_weight: boolean
 }
 
 export interface LinkPatch {
@@ -47,6 +58,9 @@ export interface LinkPatch {
   hide_empty?: boolean
   active?: boolean
   lang?: Lang
+  brands?: string[]
+  materials?: string[]
+  show_weight?: boolean
 }
 
 function text(v: unknown, max = MAX_TEXT): string {
@@ -59,6 +73,30 @@ function pct(v: unknown, fallback: number): number {
   const n = Number(v)
   if (!Number.isFinite(n)) return fallback
   return Math.max(0, Math.min(100, Math.round(n)))
+}
+
+function grams(v: unknown): number {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.max(0, Math.min(100_000, Math.round(n))) : 0
+}
+
+function whole(v: unknown): number {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.max(0, Math.min(999_999, Math.trunc(n))) : 0
+}
+
+/** A list of filter words: texts only, no duplicates (case-insensitive), at most MAX_FILTER_ITEMS. */
+export function cleanList(v: unknown): string[] | undefined {
+  if (!Array.isArray(v) || v.length > MAX_FILTER_ITEMS * 2) return undefined
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const x of v) {
+    const t = text(x)
+    if (!t || seen.has(t.toLowerCase())) continue
+    seen.add(t.toLowerCase())
+    out.push(t)
+  }
+  return out.slice(0, MAX_FILTER_ITEMS)
 }
 
 function isoOrNull(v: unknown): string | null | undefined {
@@ -86,6 +124,7 @@ export function cleanSpool(raw: unknown): PublicSpool | null {
   const effect = mode === 'special' && typeof o.color_effect === 'string'
     && (COLOR_EFFECTS as readonly string[]).includes(o.color_effect) ? o.color_effect : null
   return {
+    number: whole(o.number),
     brand: text(o.brand),
     material,
     subtype: text(o.subtype) || null,
@@ -94,6 +133,8 @@ export function cleanSpool(raw: unknown): PublicSpool | null {
     color_mode: mode,
     color_effect: effect,
     remaining_pct: pct(o.remaining_pct, 0),
+    weight_g: grams(o.weight_g),
+    spool_g: grams(o.spool_g),
   }
 }
 
@@ -123,7 +164,14 @@ export function cleanLinkInput(raw: unknown): LinkInput | string {
   if (!name) return 'name_required'
   const expires = o.expires_at === undefined ? null : isoOrNull(o.expires_at)
   if (expires === undefined) return 'bad_expires_at'
-  return { name, expires_at: expires, hide_empty: o.hide_empty !== false, lang: lang(o.lang) ?? 'de' }
+  const brands = o.brands === undefined ? [] : cleanList(o.brands)
+  if (!brands) return 'bad_brands'
+  const materials = o.materials === undefined ? [] : cleanList(o.materials)
+  if (!materials) return 'bad_materials'
+  return {
+    name, expires_at: expires, hide_empty: o.hide_empty !== false, lang: lang(o.lang) ?? 'de',
+    brands, materials, show_weight: o.show_weight !== false,
+  }
 }
 
 export function cleanLinkPatch(raw: unknown): LinkPatch | string {
@@ -152,6 +200,20 @@ export function cleanLinkPatch(raw: unknown): LinkPatch | string {
     const l = lang(o.lang)
     if (!l) return 'bad_lang'
     p.lang = l
+  }
+  if ('brands' in o) {
+    const b = cleanList(o.brands)
+    if (!b) return 'bad_brands'
+    p.brands = b
+  }
+  if ('materials' in o) {
+    const m = cleanList(o.materials)
+    if (!m) return 'bad_materials'
+    p.materials = m
+  }
+  if ('show_weight' in o) {
+    if (typeof o.show_weight !== 'boolean') return 'bad_show_weight'
+    p.show_weight = o.show_weight
   }
   return p
 }
