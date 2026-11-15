@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.1
+
+- Projects: the weight tile shows grams below 1000 g and kilograms from 1000 g (before: always kilograms, e.g. 0.05 kg).
+
 ## 1.18.0
 
 - **Colour mode for spools and the filament catalog** (like the "Colour & look" dialog of other spool managers): **Single colour**, **Gradient** (smooth transition, 2 to 4 colours, more with "+"), **Multi-colour** (2 to 3 colours side by side, dual/tri colour) and **Special** (one colour plus an effect: **Glitter**, **Glow in the dark**, **Colour change (temperature)**, **Marble**). The spool form has a mode switch, colour rows that follow the mode and a live preview (disc and bar); the catalog has compact mode and effect selects in the add form and the inline edit row.

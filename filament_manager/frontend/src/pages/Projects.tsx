@@ -380,7 +380,7 @@ function TotalsGrid({ x, showCount = true, testCount }: { x: Totals; showCount?:
           detail={testCount ? t('projects.testCount', { count: testCount }) : undefined}
         />
       )}
-      <StatTile label={t('projects.weight')} value={`${fmtNum(x.grams / 1000, 2)} ${t('common.kg')}`} />
+      <StatTile label={t('projects.weight')} value={x.grams >= 1000 ? `${fmtNum(x.grams / 1000, 2)} ${t('common.kg')}` : `${fmtNum(x.grams, 0)} ${t('common.g')}`} />
       <StatTile label={t('projects.cost')} value={fmtCurrency(x.cost)} tone={x.cost > 0 ? 'default' : 'muted'} />
       {x.kwh != null && (
         <StatTile
