@@ -79,7 +79,7 @@ Screenshots show demo data, not a real inventory.
 - **AMS spool auto-match** and tray assignment from the spool list; the dashboard asks "Which spool is in AMS 1 · T1?" with ranked candidates (colour compared by perceptual distance, product lines like "PLA+ 2.0" fit the printer's "PLA") and one-click "Assign"
 - **Colour modes** — single colour, gradient, multi-colour (dual/tri) and special (glitter, glow, colour change, marble), shown as disc and bar everywhere
 - **Manufacturer colours** — about 2,000 bundled colours of SUNLU, Bambu Lab, Polymaker, eSUN, Elegoo, Geeetech, ANYCUBIC, Jayo, TECBEARS and ERYONE (search, brand and material filter); one tap fills brand, material, subtype and colour look into the spool form, or several at once go into the filament catalog. Every colour is marked **official** (manufacturer's own page) or **community** (SpoolmanDB)
-- **Share collection** (optional) — public read-only links to your spools (name, expiry, on/off, view counter, hide empty spools), served by a small Cloudflare Worker you deploy yourself ([share_worker](share_worker/README.md)). Home Assistant stays unreachable from outside; Filly only sends brand, material, subtype, colour and remaining percent, never prices, locations or notes
+- **Share collection** (optional) — public read-only links to your spools (name, expiry, on/off, view counter, hide empty spools, only certain brands or materials, optional weight in grams), served by a small Cloudflare Worker you deploy yourself: [step-by-step guide](docs/SHARE.md), [technical details](share_worker/README.md). Home Assistant stays unreachable from outside; Filly only sends spool number, brand, material, subtype, colour, remaining percent and optionally grams, never prices, locations or notes
 - **Filament catalog** with CSV import/export, brand spool weights, optional Bambu Lab filament sync (experimental)
 - **Print projects** — group prints (production and test prints) with aggregated time, filament, cost and energy
 - **Print history** with search and date filter, description and model URL
@@ -173,9 +173,12 @@ Pushed automatically through the HA States API (no configuration needed):
 | `sensor.filament_manager_pending_usages` | Prints awaiting filament usage confirmation |
 | `sensor.filament_manager_low_stock_spools` | Spools below the low-stock threshold |
 | `sensor.filament_manager_ams_unmatched` | AMS trays with no matching spool |
+| `sensor.filament_manager_ams_spools` | AMS slots with an assigned spool (attribute `slots`: printer, slot, name, brand, material, colour, grams, percent) |
 | `sensor.filament_manager_moisture_spools` | Spools below the dryness warning threshold |
 | `sensor.filament_manager_maintenance_due` | Maintenance tasks that are due (attributes list all tasks) |
-| `sensor.filament_manager_last_print`, `_total_spools`, `_consumed_spools` | Last print, spool counts |
+| `sensor.filament_manager_last_print` | Last print; attributes include `material_cost`, `energy_cost`, `wear_cost` |
+| `sensor.filament_manager_total_spools`, `_consumed_spools` | Spool counts |
+| `sensor.filament_manager_printer_<name>_status` | Live status per printer |
 | `sensor.filament_manager_filament_used`, `_prints`, `_print_hours`, `_cost_total`, `_cost_material`, `_cost_energy`, `_cost_wear`, `_stock_weight`, `_stock_value` | **Long-term statistics** (with `state_class`, usable in statistics graphs) |
 | `sensor.filament_manager_statistics` | One snapshot for dashboards (windows with trend, stock levels, top lists, forecast) |
 
