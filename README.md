@@ -45,6 +45,10 @@ Screenshots show demo data, not a real inventory.
 
 ![Spool list and detail](filament_manager/docs/spools-list.png)
 
+**Manufacturer colours (about 2,000 colours, official or community)**
+
+![Manufacturer colours](filament_manager/docs/color-library.png)
+
 **Labels (QR code, Niimbot D110, PNG / PDF)**
 
 ![Labels](filament_manager/docs/labels.png)
