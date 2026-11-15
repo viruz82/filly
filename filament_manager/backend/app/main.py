@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from .database import engine, Base
-from .routers import spools, prints, printers, dashboard, app_settings, data_transfer, bambu_cloud, projects, filament_sync, reports, maintenance as maintenance_router, ams_auto
+from .routers import spools, prints, printers, dashboard, app_settings, data_transfer, bambu_cloud, projects, filament_sync, reports, maintenance as maintenance_router, ams_auto, color_library
 from . import bambu_cloud_client
 
 logging.basicConfig(level=logging.INFO)
@@ -610,6 +610,7 @@ app.include_router(filament_sync.router)
 app.include_router(reports.router)
 app.include_router(maintenance_router.router)
 app.include_router(ams_auto.router)
+app.include_router(color_library.router)
 
 # Serve React frontend
 # In container: __file__ = /app/app/main.py → parent.parent = /app → /app/static
