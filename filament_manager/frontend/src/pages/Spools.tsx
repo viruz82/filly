@@ -21,6 +21,7 @@ import { EMPTY_FILTER, FILTER_PARAM, defaultDir, filterSpools, isLow, isMoist, l
 import type { SortKey, SortState, SpoolFilter } from '../components/spools/spoolFilters'
 import { EMPTY_FORM, SpoolForm } from '../components/spools/SpoolForm'
 import { SpoolAuditModal, MoistureModal, WeighModal } from '../components/spools/SpoolModals'
+import { cleanColorLook } from '../components/ui/ColorLookFields'
 
 // Label dialog pulls in niimbluelib + qrcode; only load it when it is opened.
 const LabelModal = lazy(() => import('../components/LabelModal'))
@@ -158,9 +159,7 @@ export default function Spools() {
     packaging: form.packaging || null,
     subtype: form.subtype || null,
     subtype2: form.subtype2 || null,
-    color2_hex: (form.color2_hex && /^#[0-9a-fA-F]{6}$/.test(form.color2_hex)) ? form.color2_hex : null,
-    color3_hex: (form.color3_hex && /^#[0-9a-fA-F]{6}$/.test(form.color3_hex)) ? form.color3_hex : null,
-    color4_hex: (form.color4_hex && /^#[0-9a-fA-F]{6}$/.test(form.color4_hex)) ? form.color4_hex : null,
+    ...cleanColorLook(form),
     ams_slot: form.ams_slot || null,
     notes: form.notes || null,
     // null → backend takes the tare from the brand config

@@ -1,6 +1,7 @@
 // Filter, sort and status helpers shared by the tile view, the list view and the
 // detail column of the spool page.
 import type { Spool } from '../../types'
+import { effectiveEffect } from '../../utils/colorLook'
 
 export type QuickFilter = 'all' | 'moist' | 'low' | 'ams' | 'archived'
 export const QUICK_FILTERS: QuickFilter[] = ['all', 'moist', 'low', 'ams', 'archived']
@@ -133,6 +134,8 @@ export function spoolPills(s: Spool, lowPct: number, t: T): Pill[] {
   else if (m.level === 'drying') pills.push({ kind: 'warn', text: t('moisture.level.drying') })
   const tray = trayNumber(s.ams_slot)
   if (s.ams_slot) pills.push({ kind: 'info', text: tray ? t('spools.pillAms', { n: tray }) : 'AMS' })
+  const effect = effectiveEffect(s)
+  if (effect) pills.push({ kind: 'plain', text: `✦ ${t(`colorLook.effects.${effect}`)}` })
   if (m.level === 'dry' || m.level === 'good') pills.push({ kind: 'ok', text: t(`moisture.level.${m.level}`) })
   return pills
 }

@@ -1,4 +1,5 @@
 {
+  "colorLook": {"mode": "Farbmodus", "modes": {"solid": "Einfarbig", "gradient": "Verlauf", "multicolor": "Multi-Color", "special": "Spezial"}, "modeHint": {"solid": "Eine Farbe.", "gradient": "Fließender Übergang zwischen 2 bis 4 Farben.", "multicolor": "2 bis 3 Farben nebeneinander auf einer Spule (Duo-/Tri-Color).", "special": "Eine Farbe mit Spezialeffekt."}, "effect": "Effekt", "effectNone": "Effekt wählen", "effects": {"glitter": "Glitzer", "glow": "Leuchtend", "thermo": "Temperaturwechsel", "marble": "Marmor"}, "specialBadge": "Spezialeffekt", "addColor": "Farbe hinzufügen", "color": "Farbe {{n}}", "preview": "Vorschau", "needTwo": "Bitte mindestens 2 Farben angeben."},
   "nav": {
     "printers": "Drucker",
     "more": "Mehr",

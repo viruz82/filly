@@ -1,7 +1,8 @@
-// Colour disc with a "remaining" ring around it (spool colour, multi-colour split).
-export interface RingSpool {
-  color_hex?: string | null; color2_hex?: string | null; color3_hex?: string | null; color4_hex?: string | null
-}
+// Colour disc with a "remaining" ring around it (spool colour look: solid,
+// gradient, multi-colour split or special effect, see utils/colorLook).
+import { lookBackground, type ColorLook } from '../../utils/colorLook'
+
+export type RingSpool = ColorLook
 
 /** Ring colour by remaining percent: accent, warn below 40 %, crit below 15 %. */
 export function ringColor(pct: number): string {
@@ -9,10 +10,7 @@ export function ringColor(pct: number): string {
 }
 
 export function discBackground(spool: RingSpool): string {
-  const colors = [spool.color_hex, spool.color2_hex, spool.color3_hex, spool.color4_hex].filter(Boolean) as string[]
-  return colors.length > 1
-    ? `conic-gradient(${colors.map((c, i) => `${c} ${(i * 360) / colors.length}deg ${((i + 1) * 360) / colors.length}deg`).join(', ')})`
-    : colors[0] ?? '#2a2a2e'
+  return lookBackground(spool)
 }
 
 export default function Ring({ spool, pct, size = 48, title }: { spool: RingSpool; pct: number; size?: number; title?: string }) {

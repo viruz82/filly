@@ -1,3 +1,5 @@
+import type { ColorEffect, ColorMode } from './utils/colorLook'
+
 export interface Spool {
   id: number
   custom_id: number | null
@@ -10,6 +12,8 @@ export interface Spool {
   color2_hex: string | null
   color3_hex: string | null
   color4_hex: string | null
+  color_mode: ColorMode
+  color_effect: ColorEffect | null
   diameter_mm: number
   initial_weight_g: number
   current_weight_g: number
@@ -291,6 +295,8 @@ export interface FilamentCatalog {
   color2_hex: string | null
   color3_hex: string | null
   color4_hex: string | null
+  color_mode: ColorMode
+  color_effect: ColorEffect | null
   article_number: string | null
   created_at: string
   updated_at: string

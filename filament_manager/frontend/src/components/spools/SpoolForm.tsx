@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../../api'
 import { PACKAGING_TYPES } from '../../types'
 import type { Spool, BrandSpoolWeight, FilamentCatalog, Packaging } from '../../types'
-import { Plus, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import Section from '../ui/Section'
-import ColorValue from '../ui/ColorValue'
+import ColorLookFields, { colorLookError } from '../ui/ColorLookFields'
+import { effectiveMode, type ColorEffect, type ColorMode } from '../../utils/colorLook'
 import { useCurrencySymbol } from '../../hooks/useHATZ'
 import { parseDecimal, fmtNum } from '../../utils/number'
 import { AmsSlotSelect } from '../../hooks/useAmsSlots'
@@ -17,6 +18,7 @@ export const EMPTY_FORM = {
   custom_id: '',
   brand: '', material: 'PLA', subtype: '', subtype2: '', color_name: '', color_hex: '#888888',
   color2_hex: '', color3_hex: '', color4_hex: '',
+  color_mode: 'solid' as ColorMode, color_effect: '' as ColorEffect | '',
   diameter_mm: '', initial_weight_g: 1000, current_weight_g: 1000,
   spool_weight_g: '',   // own empty-spool tare; '' = take it from the brand config
   purchase_price: '', purchased_at: '', purchase_location: '', storage_location: '',
@@ -55,6 +57,8 @@ export function SpoolForm({
     color2_hex: initial?.color2_hex ?? '',
     color3_hex: initial?.color3_hex ?? '',
     color4_hex: initial?.color4_hex ?? '',
+    color_mode: initial ? effectiveMode(initial) : 'solid' as ColorMode,
+    color_effect: (initial?.color_effect ?? '') as ColorEffect | '',
   })
 
   const [measuredTotal, setMeasuredTotal] = useState('')
@@ -113,6 +117,7 @@ export function SpoolForm({
   if (!form.material) missing.push(t('spools.form.material'))
   if (!form.color_name) missing.push(t('spools.form.colorName'))
   if (!hexOk(form.color_hex)) missing.push(t('spools.form.colorSwatch'))
+  if (colorLookError(form)) missing.push(t('colorLook.color', { n: 2 }))
   if (priceBad) missing.push(t('spools.form.purchasePrice'))
   const canSave = missing.length === 0
 
@@ -124,8 +129,6 @@ export function SpoolForm({
   const filledHint = (n: number) => (n > 0 ? t('spools.form.filledCount', { count: n }) : undefined)
   const [initialPurchaseFilled] = useState(purchaseFilled)
   const [initialStorageFilled] = useState(storageFilled)
-  const hasExtraColors = !!(form.color2_hex || form.color3_hex || form.color4_hex)
-  const [showExtraColors, setShowExtraColors] = useState(hasExtraColors)
 
   const fieldClass = 'grid grid-cols-1 sm:grid-cols-2 gap-3'
 
@@ -162,8 +165,9 @@ export function SpoolForm({
                       color2_hex: entry.color2_hex ?? '',
                       color3_hex: entry.color3_hex ?? '',
                       color4_hex: entry.color4_hex ?? '',
+                      color_mode: effectiveMode(entry),
+                      color_effect: (entry.color_effect ?? '') as ColorEffect | '',
                     }))
-                    if (entry.color2_hex || entry.color3_hex || entry.color4_hex) setShowExtraColors(true)
                     setTimeout(() => weightInputRef.current?.focus(), 0)
                   } else {
                     setForm(f => ({ ...f, article_number: val }))
@@ -243,74 +247,13 @@ export function SpoolForm({
                 <input className="input" value={form.color_name} onChange={set('color_name')}
                   placeholder={t('spools.form.colorPlaceholder')} />
               </div>
-              <div>
-                <label className="label">{t('spools.form.colorSwatch')}</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    className="h-9 w-16 rounded cursor-pointer bg-surface-3 border border-surface-3"
-                    value={hexOk(form.color_hex) ? form.color_hex : '#888888'}
-                    onChange={set('color_hex')}
-                  />
-                  <div className="flex items-center flex-1">
-                    <span className="px-2 py-1.5 text-sm text-gray-400 bg-surface-3 border border-r-0 border-surface-3 rounded-l-lg select-none">#</span>
-                    <input
-                      className={`input flex-1 rounded-l-none ${form.color_hex && !hexOk(form.color_hex) ? 'border-crit focus:border-crit' : ''}`}
-                      value={form.color_hex.replace(/^#/, '')}
-                      onChange={e => setForm(f => ({ ...f, color_hex: '#' + e.target.value.replace(/^#/, '') }))}
-                      placeholder="ffffff"
-                      maxLength={6}
-                    />
-                  </div>
-                </div>
-                {form.color_hex && !hexOk(form.color_hex) && (
-                  <p className="text-xs text-crit mt-1">{t('spools.form.colorHexInvalid')}</p>
-                )}
-                {hexOk(form.color_hex) && <ColorValue hex={form.color_hex} showHex={false} className="mt-1.5" />}
-              </div>
             </div>
 
-            {/* Optional extra colors for multicolor filaments */}
-            {showExtraColors ? (
-              <div className={fieldClass}>
-                {(['color2_hex', 'color3_hex', 'color4_hex'] as const).map(key => (
-                  <div key={key}>
-                    <label className="label">{t(`spools.form.${key}`)}</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        className="h-9 w-16 rounded cursor-pointer bg-surface-3 border border-surface-3"
-                        value={hexOk(form[key]) ? form[key] : '#888888'}
-                        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                      />
-                      <div className="flex items-center flex-1">
-                        <span className="px-2 py-1.5 text-sm text-gray-400 bg-surface-3 border border-r-0 border-surface-3 rounded-l-lg select-none">#</span>
-                        <input
-                          className="input flex-1 rounded-l-none"
-                          value={form[key].replace(/^#/, '')}
-                          onChange={e => setForm(f => ({ ...f, [key]: e.target.value ? '#' + e.target.value.replace(/^#/, '') : '' }))}
-                          placeholder={t('common.optional')}
-                          maxLength={6}
-                        />
-                      </div>
-                      {form[key] && (
-                        <button type="button" className="text-gray-500 hover:text-crit p-1" aria-label={t('common.clear')} onClick={() => setForm(f => ({ ...f, [key]: '' }))}>
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-                    {form[key] && !hexOk(form[key]) && (
-                      <p className="text-xs text-crit mt-1">{t('spools.form.colorHexInvalid')}</p>
-                    )}
-                    {form[key] && hexOk(form[key]) && <ColorValue hex={form[key]} showHex={false} className="mt-1.5" />}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <button type="button" className="chip" onClick={() => setShowExtraColors(true)}>
-                <Plus size={12} /> {t('spools.form.moreColors')}
-              </button>
-            )}
+            <ColorLookFields
+              value={form}
+              onChange={patch => setForm(f => ({ ...f, ...patch }))}
+              colorLabel={t('spools.form.colorSwatch')}
+            />
           </Section>
 
           {/* 3 — weight */}

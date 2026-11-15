@@ -5,6 +5,7 @@ import { useToast } from '../../components/ui/Feedback'
 import { api } from '../../api'
 import type { FilamentSubtype, FilamentCatalog } from '../../types'
 import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, ChevronsUpDown, Download, Upload } from 'lucide-react'
+import { COLOR_EFFECTS, COLOR_MODES, clampLook, effectiveEffect, effectiveMode, lookBackground, type ColorEffect, type ColorMode } from '../../utils/colorLook'
 
 // ── Filament Catalog Section ──────────────────────────────────────────────────
 
@@ -14,7 +15,33 @@ const EMPTY_CATALOG: CatalogEntry = {
   brand: '', material: '', subtype: null, subtype2: null,
   color_name: '', color_hex: '#888888',
   color2_hex: null, color3_hex: null, color4_hex: null,
+  color_mode: 'solid', color_effect: null,
   article_number: null,
+}
+
+/** Compact mode + effect selects for the catalog (1.18.0). */
+function LookSelect({ value, onChange, small }: {
+  value: { color_mode: ColorMode; color_effect: ColorEffect | null }
+  onChange: (patch: { color_mode?: ColorMode; color_effect?: ColorEffect | null }) => void
+  small?: boolean
+}) {
+  const { t } = useTranslation()
+  const cls = small ? 'input text-xs py-0.5 w-full' : 'input text-xs py-1 w-full'
+  return (
+    <div className="flex flex-col gap-1">
+      <select className={cls} aria-label={t('colorLook.mode')} value={value.color_mode}
+        onChange={e => onChange({ color_mode: e.target.value as ColorMode })}>
+        {COLOR_MODES.map(m => <option key={m} value={m}>{t(`colorLook.modes.${m}`)}</option>)}
+      </select>
+      {value.color_mode === 'special' && (
+        <select className={cls} aria-label={t('colorLook.effect')} value={value.color_effect ?? ''}
+          onChange={e => onChange({ color_effect: (e.target.value || null) as ColorEffect | null })}>
+          <option value="">{t('colorLook.effectNone')}</option>
+          {COLOR_EFFECTS.map(x => <option key={x} value={x}>{t(`colorLook.effects.${x}`)}</option>)}
+        </select>
+      )}
+    </div>
+  )
 }
 
 type CatalogSortKey = 'brand' | 'material' | 'subtype' | 'subtype2' | 'color_name' | 'color_hex' | 'color2_hex' | 'color3_hex' | 'color4_hex' | 'article_number'
@@ -100,6 +127,7 @@ function CatalogEditRow({ entry, editForm, setEditForm, onSave, onCancel, brands
                 )}
               </div>
             ))}
+            <LookSelect small value={editForm} onChange={patch => setEditForm({ ...editForm, ...patch })} />
           </div>
         </td>
         <td className="px-2 py-1"><input className="input text-xs py-0.5 w-full" value={editForm.article_number ?? ''} onChange={e => set('article_number', e.target.value)} /></td>
@@ -165,6 +193,7 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
   const createMut = useMutation({
     mutationFn: () => api.createFilamentCatalog({
       ...form,
+      ...clampLook({ ...form, color_mode: effectiveMode(form) }),
       subtype: form.subtype || null,
       subtype2: form.subtype2 || null,
       article_number: form.article_number || null,
@@ -174,6 +203,7 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
   const updateMut = useMutation({
     mutationFn: (id: number) => api.updateFilamentCatalog(id, {
       ...editForm,
+      ...clampLook({ ...editForm, color_mode: effectiveMode(editForm) }),
       subtype: editForm.subtype || null,
       subtype2: editForm.subtype2 || null,
       article_number: editForm.article_number || null,
@@ -253,7 +283,7 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
 
   const startEdit = (e: FilamentCatalog) => {
     setEditingId(e.id)
-    setEditForm({ brand: e.brand, material: e.material, subtype: e.subtype ?? '', subtype2: e.subtype2 ?? '', color_name: e.color_name, color_hex: e.color_hex, color2_hex: e.color2_hex ?? null, color3_hex: e.color3_hex ?? null, color4_hex: e.color4_hex ?? null, article_number: e.article_number ?? '' })
+    setEditForm({ brand: e.brand, material: e.material, subtype: e.subtype ?? '', subtype2: e.subtype2 ?? '', color_name: e.color_name, color_hex: e.color_hex, color2_hex: e.color2_hex ?? null, color3_hex: e.color3_hex ?? null, color4_hex: e.color4_hex ?? null, color_mode: effectiveMode(e), color_effect: effectiveEffect(e), article_number: e.article_number ?? '' })
   }
 
   const addHexValid = /^#[0-9a-fA-F]{6}$/.test(form.color_hex)
@@ -408,6 +438,10 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
                 </div>
               </div>
             ))}
+            <div>
+              <label className="label text-xs">{t('colorLook.mode')}</label>
+              <LookSelect value={form} onChange={patch => setForm(f => ({ ...f, ...patch }))} />
+            </div>
           </div>
         </div>
       )}
@@ -510,8 +544,13 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
                 <td className="px-3 py-2 whitespace-nowrap text-gray-400">{entry.subtype2 ?? '—'}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/10" style={{ background: entry.color_hex }} />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/10" style={{ background: lookBackground(entry) }} />
                     {entry.color_name}
+                    {effectiveMode(entry) !== 'solid' && (
+                      <span className="text-gray-500">
+                        · {effectiveEffect(entry) ? t(`colorLook.effects.${effectiveEffect(entry)}`) : t(`colorLook.modes.${effectiveMode(entry)}`)}
+                      </span>
+                    )}
                   </span>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap font-mono text-gray-400">{entry.color_hex}</td>

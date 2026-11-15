@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { X, Droplet, Flame, Scale, Pencil, QrCode, History, Archive, ArchiveRestore, Copy, Trash2, Cloud, Recycle, ChevronDown, ChevronUp } from 'lucide-react'
 import Ring from '../ui/Ring'
 import ColorValue from '../ui/ColorValue'
+import { effectiveEffect, effectiveMode } from '../../utils/colorLook'
 import { AmsSlotSelect, useAmsSlotLabel } from '../../hooks/useAmsSlots'
 import { useCurrencyFormatter } from '../../hooks/useHATZ'
 import { formatDateOnly } from '../../utils/time'
@@ -131,6 +132,12 @@ function DetailBody({ spool, spools, lowPct, actions, onClose, sheet }: {
         <Row k={t('spools.table.material')}>{spool.material}{subtypes ? ` · ${subtypes}` : ''}</Row>
         <Row k={t('spools.detail.color')}>
           <div className="flex flex-col items-end gap-1.5">
+            {effectiveMode(spool) !== 'solid' && (
+              <span className="text-gray-300">
+                {t(`colorLook.modes.${effectiveMode(spool)}`)}
+                {effectiveEffect(spool) ? ` · ${t(`colorLook.effects.${effectiveEffect(spool)}`)}` : ''}
+              </span>
+            )}
             {[spool.color_hex, spool.color2_hex, spool.color3_hex, spool.color4_hex]
               .filter((h): h is string => !!h)
               .map(h => <ColorValue key={h} hex={h} className="justify-end" />)}

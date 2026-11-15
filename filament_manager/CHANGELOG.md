@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.18.0
+
+- **Colour mode for spools and the filament catalog** (like the "Colour & look" dialog of other spool managers): **Single colour**, **Gradient** (smooth transition, 2 to 4 colours, more with "+"), **Multi-colour** (2 to 3 colours side by side, dual/tri colour) and **Special** (one colour plus an effect: **Glitter**, **Glow in the dark**, **Colour change (temperature)**, **Marble**). The spool form has a mode switch, colour rows that follow the mode and a live preview (disc and bar); the catalog has compact mode and effect selects in the add form and the inline edit row.
+- Display: the colour disc follows the mode everywhere (spool tiles, list, detail, prints, dashboard, printers): gradient as a smooth blend, multi-colour as segments, special with a light effect overlay. Special spools get a pill with the effect ("✦ Glitter") in tiles and list; the detail shows mode and effect next to the colours; the catalog table shows them next to the colour name.
+- Surface (matte, silk, wood, marble …) stays the existing subtype, there is no second field for it.
+- Database: new columns `color_mode` (`solid`/`gradient`/`multicolor`/`special`, default `solid`) and `color_effect` (`glitter`/`glow`/`thermo`/`marble`, only with `special`) on `spools` and `filament_catalog`, added automatically; existing rows with a second colour become `multicolor`, so they look as before. Rows without a mode (e.g. from the cloud sync) that carry several colours are shown as multi-colour.
+- API: spool and catalog create/update accept and validate both fields; an effect is dropped unless the mode is `special`. Catalog updates pass mode and effect on to spools with the same article number. JSON export/import and the spool CSV export/import carry both fields; older exports without them still import.
+- Tests: 485 backend tests (19 new for validation, normalisation, migration and export/import).
+
 ## 1.17.2
 
 - **Renamed to "Filly"** (display name only): add-on name, panel title, app header with the line "Your filament friend" (de: "Dein Filament-Kumpel", es: "Tu amigo del filamento"), README title. Add-on slug, sensor names (`sensor.filament_manager_*`) and data are unchanged. Still a fork of cgradl/filament-manager (MIT), credit stays.

@@ -1,4 +1,5 @@
 {
+  "colorLook": {"mode": "Colour mode", "modes": {"solid": "Single colour", "gradient": "Gradient", "multicolor": "Multi-colour", "special": "Special"}, "modeHint": {"solid": "One colour.", "gradient": "Smooth transition between 2 to 4 colours.", "multicolor": "2 to 3 colours side by side on one spool (dual/tri colour).", "special": "One colour with a special effect."}, "effect": "Effect", "effectNone": "Choose effect", "effects": {"glitter": "Glitter", "glow": "Glow in the dark", "thermo": "Colour change (temperature)", "marble": "Marble"}, "specialBadge": "Special effect", "addColor": "Add colour", "color": "Colour {{n}}", "preview": "Preview", "needTwo": "Please enter at least 2 colours."},
   "nav": {
     "printers": "Printers",
     "more": "More",
