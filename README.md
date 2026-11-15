@@ -113,7 +113,7 @@ Screenshots show demo data, not a real inventory.
 
 ## Installation
 
-Go to **Settings → Add-ons → Add-on Store** → three-dot menu → **Repositories** → paste `https://github.com/viruz82/filament-manager` → **Add**.
+Go to **Settings → Add-ons → Add-on Store** → three-dot menu → **Repositories** → paste `https://github.com/viruz82/filly` → **Add**.
 
 Once "Filly" appears, open it and press **Install**.
 

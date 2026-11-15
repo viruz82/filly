@@ -2,7 +2,7 @@ name: "Filly"
 description: "Track filament inventory, print history and costs. Integrates with Bambu Lab via Home Assistant."
 version: "1.21.0"
 slug: "filament_manager"
-url: "https://github.com/viruz82/filament-manager"
+url: "https://github.com/viruz82/filly"
 init: false
 arch:
   - aarch64
