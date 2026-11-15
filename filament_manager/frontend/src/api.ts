@@ -206,6 +206,17 @@ export const api = {
   importFilamentCatalog: (rows: { brand: string; material: string; subtype: string | null; subtype2: string | null; color_name: string; color_hex: string; article_number: string | null }[]) =>
     request<{ added: number; updated: number }>('settings/filament-catalog/import', { method: 'POST', body: JSON.stringify({ rows }) }),
 
+  // Manufacturer colour library (1.19.0)
+  getColorLibrary: (params: { brand?: string; material?: string; q?: string; limit?: number } = {}) => {
+    const qs = new URLSearchParams()
+    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== '') qs.set(k, String(v)) })
+    const s = qs.toString()
+    return request<import('./types').ColorLibrary>(`color-library${s ? '?' + s : ''}`)
+  },
+  colorLibraryToCatalog: (items: import('./types').LibraryPick[]) =>
+    request<{ added: number; skipped: number; ids: number[]; lists_added: Record<string, string[]> }>(
+      'color-library/to-catalog', { method: 'POST', body: JSON.stringify({ items }) }),
+
   // Version / Changelog
   getVersion: () => request<{ version: string }>('settings/version'),
   getChangelog: () => request<{ changelog: string }>('settings/changelog'),

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useToast } from '../../components/ui/Feedback'
 import { api } from '../../api'
 import type { FilamentSubtype, FilamentCatalog } from '../../types'
-import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, ChevronsUpDown, Download, Upload } from 'lucide-react'
+import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, ChevronsUpDown, Download, Upload, Palette } from 'lucide-react'
+import ColorLibraryPicker from '../../components/ColorLibraryPicker'
 import { COLOR_EFFECTS, COLOR_MODES, clampLook, effectiveEffect, effectiveMode, lookBackground, type ColorEffect, type ColorMode } from '../../utils/colorLook'
 
 // ── Filament Catalog Section ──────────────────────────────────────────────────
@@ -156,6 +157,7 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
   const { t } = useTranslation()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
+  const [showLibrary, setShowLibrary] = useState(false)
   const [form, setForm] = useState<CatalogEntry>({ ...EMPTY_CATALOG })
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<CatalogEntry>({ ...EMPTY_CATALOG })
@@ -313,9 +315,9 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
 
   return (
     <div className="space-y-3">
-      <div className="sticky top-0 z-10 bg-surface pb-1 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-surface pb-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <h3 className="text-sm font-semibold text-gray-300">{t('settings.filamentCatalog.title')}</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             ref={csvInputRef}
             type="file"
@@ -327,15 +329,25 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
             className="btn-ghost text-xs px-2 py-1 flex items-center gap-1"
             onClick={handleExportCatalogCsv}
             disabled={catalog.length === 0}
+            title={t('settings.filamentCatalog.exportCsv')}
+            aria-label={t('settings.filamentCatalog.exportCsv')}
           >
-            <Download size={12} /> {t('settings.filamentCatalog.exportCsv')}
+            <Download size={12} /> <span className="hidden sm:inline">{t('settings.filamentCatalog.exportCsv')}</span>
           </button>
           <button
             className="btn-ghost text-xs px-2 py-1 flex items-center gap-1"
             onClick={() => { setImportResult(null); csvInputRef.current?.click() }}
             disabled={importMut.isPending}
+            title={t('settings.filamentCatalog.importCsv')}
+            aria-label={t('settings.filamentCatalog.importCsv')}
           >
-            <Upload size={12} /> {t('settings.filamentCatalog.importCsv')}
+            <Upload size={12} /> <span className="hidden sm:inline">{t('settings.filamentCatalog.importCsv')}</span>
+          </button>
+          <button
+            className="btn-ghost text-xs px-2 py-1 flex items-center gap-1"
+            onClick={() => setShowLibrary(true)}
+          >
+            <Palette size={12} /> {t('colorLibrary.title')}
           </button>
           <button
             className="btn-primary text-xs px-2 py-1 flex items-center gap-1"
@@ -345,6 +357,8 @@ export function FilamentDataSection({ actionsLast }: { actionsLast: boolean }) {
           </button>
         </div>
       </div>
+
+      {showLibrary && <ColorLibraryPicker mode="multi" onClose={() => setShowLibrary(false)} />}
 
       {importResult && (
         <div className="text-xs px-3 py-2 rounded bg-ok/15 border border-ok/40 text-ok flex items-center justify-between">

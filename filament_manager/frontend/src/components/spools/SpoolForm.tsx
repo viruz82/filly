@@ -4,13 +4,16 @@ import { useTranslation } from 'react-i18next'
 import { api } from '../../api'
 import { PACKAGING_TYPES } from '../../types'
 import type { Spool, BrandSpoolWeight, FilamentCatalog, Packaging } from '../../types'
-import { X } from 'lucide-react'
+import { Palette, X } from 'lucide-react'
 import Section from '../ui/Section'
 import ColorLookFields, { colorLookError } from '../ui/ColorLookFields'
 import { effectiveMode, type ColorEffect, type ColorMode } from '../../utils/colorLook'
 import { useCurrencySymbol } from '../../hooks/useHATZ'
 import { parseDecimal, fmtNum } from '../../utils/number'
 import { AmsSlotSelect } from '../../hooks/useAmsSlots'
+import ColorLibraryPicker from '../ColorLibraryPicker'
+import { useToast } from '../ui/Feedback'
+import type { LibraryPick } from '../../types'
 
 // ── Spool Form ────────────────────────────────────────────────────────────────
 
@@ -61,6 +64,8 @@ export function SpoolForm({
     color_effect: (initial?.color_effect ?? '') as ColorEffect | '',
   })
 
+  const toast = useToast()
+  const [showLibrary, setShowLibrary] = useState(false)
   const [measuredTotal, setMeasuredTotal] = useState('')
   const [quantity, setQuantity] = useState(1)
   const weightInputRef = useRef<HTMLInputElement>(null)
@@ -93,6 +98,26 @@ export function SpoolForm({
   const onBrandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // A new brand brings its own tare: drop the per-spool value
     setForm(f => ({ ...f, brand: e.target.value, spool_weight_g: '' }))
+  }
+
+  // 1.19.0: take brand, material, subtypes and the whole colour look from the library
+  const applyLibrary = (p: LibraryPick) => {
+    setForm(f => ({
+      ...f,
+      brand: p.brand,
+      spool_weight_g: p.brand.toLowerCase() === f.brand.toLowerCase() ? f.spool_weight_g : '',
+      material: p.material,
+      subtype: p.subtype ?? '',
+      subtype2: p.subtype2 ?? '',
+      color_name: p.color_name,
+      color_hex: p.hex[0],
+      color2_hex: p.hex[1] ?? '',
+      color3_hex: p.hex[2] ?? '',
+      color4_hex: p.hex[3] ?? '',
+      color_mode: p.color_mode,
+      color_effect: (p.color_effect ?? '') as ColorEffect | '',
+    }))
+    toast(t('colorLibrary.applied', { name: `${p.brand} ${p.material} ${p.color_name}` }))
   }
 
   const setOwnTare = (val: string) => {
@@ -196,6 +221,7 @@ export function SpoolForm({
               <div>
                 <label className="label">{t('spools.form.material')} *</label>
                 <select className="input" value={form.material} onChange={set('material')}>
+                  {form.material && !materials.includes(form.material) && <option>{form.material}</option>}
                   {materials.map(m => <option key={m}>{m}</option>)}
                 </select>
               </div>
@@ -203,6 +229,7 @@ export function SpoolForm({
                 <label className="label">{t('spools.form.subtype')}</label>
                 <select className="input" value={form.subtype ?? ''} onChange={set('subtype')}>
                   <option value="">{t('common.none')}</option>
+                  {form.subtype && !subtypes.includes(form.subtype) && <option>{form.subtype}</option>}
                   {subtypes.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
@@ -210,6 +237,7 @@ export function SpoolForm({
                 <label className="label">{t('spools.form.subtype2')}</label>
                 <select className="input" value={form.subtype2 ?? ''} onChange={set('subtype2')}>
                   <option value="">{t('common.none')}</option>
+                  {form.subtype2 && !subtypes.includes(form.subtype2) && <option>{form.subtype2}</option>}
                   {subtypes.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
@@ -241,6 +269,9 @@ export function SpoolForm({
 
           {/* 2 — colour */}
           <Section title={t('spools.form.groupColor')}>
+            <button type="button" className="chip self-start" onClick={() => setShowLibrary(true)}>
+              <Palette size={12} /> {t('colorLibrary.open')}
+            </button>
             <div className={fieldClass}>
               <div>
                 <label className="label">{t('spools.form.colorName')} *</label>
@@ -476,6 +507,14 @@ export function SpoolForm({
           </div>
         </div>
       </div>
+      {showLibrary && (
+        <ColorLibraryPicker
+          mode="single"
+          initialBrand={form.brand}
+          onPick={applyLibrary}
+          onClose={() => setShowLibrary(false)}
+        />
+      )}
     </div>
   )
 }

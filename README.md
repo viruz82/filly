@@ -2,7 +2,7 @@
 
 *Your filament friend.* A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
 
-![Version](https://img.shields.io/badge/version-1.18.1-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
+![Version](https://img.shields.io/badge/version-1.19.0-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
 
 > **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filly", formerly "Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
 
@@ -77,6 +77,8 @@ Screenshots show demo data, not a real inventory.
 - **Spool inventory** — brand, material, subtype, colours (up to 4 for multicolour, shown as hex **and** RGB with click-to-copy, e.g. for Bambu Studio), article number, weight, tare, price, purchase and storage location, notes; archive instead of delete; weight history per spool
 - **Weigh from the list** — enter the scale reading, the remaining weight is calculated with the spool's own tare
 - **AMS spool auto-match** and tray assignment from the spool list; the dashboard asks "Which spool is in AMS 1 · T1?" with ranked candidates (colour compared by perceptual distance, product lines like "PLA+ 2.0" fit the printer's "PLA") and one-click "Assign"
+- **Colour modes** — single colour, gradient, multi-colour (dual/tri) and special (glitter, glow, colour change, marble), shown as disc and bar everywhere
+- **Manufacturer colours** — about 2,000 bundled colours of SUNLU, Bambu Lab, Polymaker, eSUN, Elegoo, Geeetech, ANYCUBIC, Jayo, TECBEARS and ERYONE (search, brand and material filter); one tap fills brand, material, subtype and colour look into the spool form, or several at once go into the filament catalog. Every colour is marked **official** (manufacturer's own page) or **community** (SpoolmanDB)
 - **Filament catalog** with CSV import/export, brand spool weights, optional Bambu Lab filament sync (experimental)
 - **Print projects** — group prints (production and test prints) with aggregated time, filament, cost and energy
 - **Print history** with search and date filter, description and model URL
@@ -189,6 +191,8 @@ Pushed automatically through the HA States API (no configuration needed):
 ## License
 
 MIT License. Not affiliated with Bambu Lab, Niimbot or Home Assistant.
+
+**Colour data** (`filament_manager/backend/app/data/manufacturer_colors.json`, built by `tools/build_manufacturer_colors.py`): community values come from [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (MIT License, Copyright (c) 2024 Donkie; the commit used is recorded in the file); official values come from the manufacturers' own pages (SUNLU product pages, Polymaker wiki "HEX Codes and Transmission Distances"). Brand names belong to their owners. Hex values are guide values; screen colours differ from the printed filament.
 
 ---
 

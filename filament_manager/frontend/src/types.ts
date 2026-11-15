@@ -469,3 +469,64 @@ export interface MaintenanceLogEntry {
   grams_since: number | null
   days_since: number | null
 }
+
+// ── Manufacturer colour library (1.19.0) ──────────────────────────────────────
+
+export interface LibraryColor {
+  name: string
+  hex: string[]
+  src: 'official' | 'community'
+  mode?: ColorMode
+  effect?: ColorEffect
+  sku?: string
+}
+
+export interface LibraryLine {
+  brand: string
+  line: string
+  material: string
+  subtype: string | null
+  subtype2: string | null
+  colors: LibraryColor[]
+}
+
+export interface LibraryBrand {
+  brand: string
+  lines: number
+  colors: number
+  official: number
+  community: number
+}
+
+export interface LibrarySource {
+  id: string
+  name: string
+  kind: 'official' | 'community'
+  url: string
+  license?: string
+  commit?: string
+  retrieved?: string
+}
+
+export interface ColorLibrary {
+  generated: string | null
+  notice: string
+  sources: LibrarySource[]
+  brands: LibraryBrand[]
+  materials: string[]
+  lines?: LibraryLine[]
+  count?: number
+  truncated?: boolean
+}
+
+export interface LibraryPick {
+  brand: string
+  material: string
+  subtype: string | null
+  subtype2: string | null
+  color_name: string
+  hex: string[]
+  color_mode: ColorMode
+  color_effect: ColorEffect | null
+  article_number: string | null
+}

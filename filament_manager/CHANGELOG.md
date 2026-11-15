@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.19.0
+
+- **Manufacturer colours**: a bundled colour library with 1,978 colours in 224 product lines of SUNLU, Bambu Lab, Polymaker, eSUN, Elegoo, Geeetech, ANYCUBIC, Jayo, TECBEARS and ERYONE, all materials. Each colour carries its source: **official** (1,069: the "Color Code" tables on the SUNLU product pages, the Polymaker wiki "HEX Codes and Transmission Distances" with SKU) or **community** (909: SpoolmanDB, MIT licence). For SUNLU the official value wins over the community value; SUNLU lines missing in SpoolmanDB (High Speed PLA+ / PLA+ 2.0, Twinkling, Metallic, PVA, PVB, PCL, APLA, ABS Transparent, PETG Transparent, PETG Glow …) come from the official pages; community duplicates of an official colour under another name are dropped.
+- Mapping to Filly: product line → material and subtypes (Matte, Silk, Silk+, High Speed, Lite, Meta, Metal, Marble, Galaxy, Glow, Translucent, Basic, HF, Wood, Plus); SpoolmanDB `coaxial` (split dual/tri colour) → **Multi-colour**, `longitudinal` (colour changes along the length) → **Gradient**; sparkle/galaxy/starlight → Special **Glitter**, marble → **Marble**, glow/luminous → **Glow in the dark**, temperature → **Colour change**. Four coaxial colours become a gradient (multi-colour holds three).
+- Spool form: "Pick from manufacturer colours" in the colour section opens a dialog (search over colour, line, hex and article number, brand and material filter, "official values only"); one tap fills brand, material, subtypes, colour name, colours, mode and effect. The brand of the form is preselected; "Search all brands" when nothing fits. Material and subtype selects also show values that are not in their lists yet.
+- Filament catalog: button "Manufacturer colours" with multi-select and "Add to catalog"; duplicates (same article number, or same brand + material + subtype + colour name) are skipped, missing brands, materials and subtypes are added to their lists, Polymaker SKUs become article numbers. On phones the catalog header wraps and CSV export/import show icons only.
+- API: `GET /api/color-library` (overview; with `brand`, `material`, `q`, `limit` the matching lines), `POST /api/color-library/to-catalog`.
+- Data: `backend/app/data/manufacturer_colors.json` (155 KB), rebuilt with `python tools/build_manufacturer_colors.py` (standard library only, SpoolmanDB commit pinned and recorded in the file). Licence and source notice in the file, the dialog and the README.
+- Tests: 516 backend tests (31 new for the data file, the routes and the builder).
+
 ## 1.18.1
 
 - Projects: the weight tile shows grams below 1000 g and kilograms from 1000 g (before: always kilograms, e.g. 0.05 kg).
