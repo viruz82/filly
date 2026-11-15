@@ -1,0 +1,21 @@
+# Filly share Worker. No account id or address in here: wrangler reads
+# CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN from the environment.
+name = "sammlung"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+preview_urls = false
+
+[vars]
+TZ = "Europe/Berlin"
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "ShareStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ShareStore"]
+
+[observability]
+enabled = false

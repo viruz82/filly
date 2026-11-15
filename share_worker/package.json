@@ -1,0 +1,19 @@
+{
+  "name": "filly-share-worker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.8.2",
+    "@cloudflare/workers-types": "5.20261115.1",
+    "typescript": "^5.7.2",
+    "vitest": "5.1.0",
+    "wrangler": "4.162.0"
+  }
+}
