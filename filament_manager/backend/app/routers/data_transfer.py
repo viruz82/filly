@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..util import utcnow
+from ..util import clean_color_effect, clean_color_mode, utcnow
 from ..models import (
     Spool, PrintJob, PrintUsage, Project, ProjectPrint,
     BrandSpoolWeight, FilamentMaterial, FilamentSubtype, FilamentBrand,
@@ -56,6 +56,8 @@ def _spool_dict(s: Spool) -> dict:
         "color2_hex": s.color2_hex,
         "color3_hex": s.color3_hex,
         "color4_hex": s.color4_hex,
+        "color_mode": s.color_mode,
+        "color_effect": s.color_effect,
         "diameter_mm": s.diameter_mm,
         "initial_weight_g": s.initial_weight_g,
         "current_weight_g": s.current_weight_g,
@@ -216,6 +218,8 @@ def export_data(db: Session = Depends(get_db)):
                     "color2_hex": e.color2_hex,
                     "color3_hex": e.color3_hex,
                     "color4_hex": e.color4_hex,
+                    "color_mode": e.color_mode,
+                    "color_effect": e.color_effect,
                     "article_number": e.article_number,
                 }
                 for e in catalog
@@ -233,7 +237,8 @@ def export_data(db: Session = Depends(get_db)):
 
 CSV_COLUMNS = [
     "id", "custom_id", "brand", "material", "subtype", "subtype2",
-    "color_name", "color_hex", "color2_hex", "color3_hex", "color4_hex", "diameter_mm",
+    "color_name", "color_hex", "color2_hex", "color3_hex", "color4_hex",
+    "color_mode", "color_effect", "diameter_mm",
     "initial_weight_g", "current_weight_g", "spool_weight_g", "remaining_pct",
     "purchase_price", "price_per_kg",
     "purchased_at", "purchase_location", "storage_location",
@@ -259,6 +264,8 @@ def export_spools_csv(db: Session = Depends(get_db)):
             "color2_hex":       s.color2_hex or "",
             "color3_hex":       s.color3_hex or "",
             "color4_hex":       s.color4_hex or "",
+            "color_mode":       s.color_mode or "solid",
+            "color_effect":     s.color_effect or "",
             "diameter_mm":      s.diameter_mm or "",
             "initial_weight_g": s.initial_weight_g,
             "current_weight_g": s.current_weight_g,
@@ -550,7 +557,8 @@ async def import_spools_csv(file: UploadFile = File(...), db: Session = Depends(
     # Columns we write back (skip computed remaining_pct, price_per_kg)
     WRITABLE = {
         "custom_id", "brand", "material", "subtype", "subtype2",
-        "color_name", "color_hex", "color2_hex", "color3_hex", "color4_hex", "diameter_mm",
+        "color_name", "color_hex", "color2_hex", "color3_hex", "color4_hex",
+    "color_mode", "color_effect", "diameter_mm",
         "initial_weight_g", "current_weight_g", "spool_weight_g",
         "purchase_price", "purchased_at", "purchase_location",
         "storage_location", "article_number", "last_dried_at", "ams_slot", "notes", "archived",
@@ -596,6 +604,10 @@ async def import_spools_csv(file: UploadFile = File(...), db: Session = Depends(
         for req in ("initial_weight_g", "current_weight_g"):
             if req in fields and fields[req] is None:
                 fields.pop(req)
+        # colour look: invalid/empty → derived; effect only with "special"
+        if "color_mode" in fields or "color_effect" in fields:
+            fields["color_mode"] = clean_color_mode(fields.get("color_mode"), fields.get("color2_hex"))
+            fields["color_effect"] = clean_color_effect(fields["color_mode"], fields.get("color_effect"))
 
         # Upsert: update if id matches an existing spool, else create
         raw_id = (row.get("id") or "").strip()
@@ -724,6 +736,9 @@ def import_data(bundle: ImportBundle, db: Session = Depends(get_db)):
             color2_hex=entry.get("color2_hex"),
             color3_hex=entry.get("color3_hex"),
             color4_hex=entry.get("color4_hex"),
+            color_mode=clean_color_mode(entry.get("color_mode"), entry.get("color2_hex")),
+            color_effect=clean_color_effect(
+                clean_color_mode(entry.get("color_mode"), entry.get("color2_hex")), entry.get("color_effect")),
             article_number=article,
         ))
         if article:
@@ -821,6 +836,9 @@ def import_data(bundle: ImportBundle, db: Session = Depends(get_db)):
             color2_hex=sp.get("color2_hex"),
             color3_hex=sp.get("color3_hex"),
             color4_hex=sp.get("color4_hex"),
+            color_mode=clean_color_mode(sp.get("color_mode"), sp.get("color2_hex")),
+            color_effect=clean_color_effect(
+                clean_color_mode(sp.get("color_mode"), sp.get("color2_hex")), sp.get("color_effect")),
             diameter_mm=sp.get("diameter_mm", 1.75),
             initial_weight_g=sp.get("initial_weight_g", 1000),
             current_weight_g=sp.get("current_weight_g", 0),

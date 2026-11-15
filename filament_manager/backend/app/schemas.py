@@ -1,6 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
+from .util import COLOR_EFFECT_PATTERN, COLOR_MODE_PATTERN
+
 # Validation pattern for hex colors as the frontend submits them ("#RRGGBB").
 # Applied to INPUT schemas only — output schemas must keep serializing legacy
 # rows whose stored values predate validation.
@@ -20,6 +22,8 @@ class SpoolBase(BaseModel):
     color2_hex: str | None = None
     color3_hex: str | None = None
     color4_hex: str | None = None
+    color_mode: str = "solid"
+    color_effect: str | None = None
     diameter_mm: float = 1.75
     initial_weight_g: float
     current_weight_g: float
@@ -54,6 +58,8 @@ class SpoolCreate(SpoolBase):
     color2_hex: str | None = Field(default=None, pattern=HEX_COLOR)
     color3_hex: str | None = Field(default=None, pattern=HEX_COLOR)
     color4_hex: str | None = Field(default=None, pattern=HEX_COLOR)
+    color_mode: str = Field(default="solid", pattern=COLOR_MODE_PATTERN)
+    color_effect: str | None = Field(default=None, pattern=COLOR_EFFECT_PATTERN)
     diameter_mm: float = Field(default=1.75, gt=0)
     initial_weight_g: float = Field(gt=0)
     current_weight_g: float = Field(ge=0)
@@ -73,6 +79,8 @@ class SpoolUpdate(BaseModel):
     color2_hex: str | None = Field(default=None, pattern=HEX_COLOR)
     color3_hex: str | None = Field(default=None, pattern=HEX_COLOR)
     color4_hex: str | None = Field(default=None, pattern=HEX_COLOR)
+    color_mode: str | None = Field(default=None, pattern=COLOR_MODE_PATTERN)
+    color_effect: str | None = Field(default=None, pattern=COLOR_EFFECT_PATTERN)
     diameter_mm: float | None = Field(default=None, gt=0)
     initial_weight_g: float | None = Field(default=None, gt=0)
     current_weight_g: float | None = Field(default=None, ge=0)
@@ -364,11 +372,14 @@ class FilamentCatalogBase(BaseModel):
     color2_hex: str | None = None
     color3_hex: str | None = None
     color4_hex: str | None = None
+    color_mode: str = "solid"
+    color_effect: str | None = None
     article_number: str | None = None
 
 
 class FilamentCatalogCreate(FilamentCatalogBase):
-    pass
+    color_mode: str = Field(default="solid", pattern=COLOR_MODE_PATTERN)
+    color_effect: str | None = Field(default=None, pattern=COLOR_EFFECT_PATTERN)
 
 
 class FilamentCatalogUpdate(BaseModel):
@@ -381,6 +392,8 @@ class FilamentCatalogUpdate(BaseModel):
     color2_hex: str | None = None
     color3_hex: str | None = None
     color4_hex: str | None = None
+    color_mode: str | None = Field(default=None, pattern=COLOR_MODE_PATTERN)
+    color_effect: str | None = Field(default=None, pattern=COLOR_EFFECT_PATTERN)
     article_number: str | None = None
     propagate_to_spools: bool = False
 

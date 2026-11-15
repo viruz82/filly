@@ -13,6 +13,30 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
+
+def migrate_color_look(conn, insp) -> None:
+    """spools + filament_catalog: colour mode and effect (1.18.0).
+
+    Rows that already carry a second colour become "multicolor" so they look
+    exactly as before. Idempotent: does nothing once the columns exist.
+    """
+    from sqlalchemy import text
+    for table in ("spools", "filament_catalog"):
+        cols = [c["name"] for c in insp.get_columns(table)]
+        if "color_mode" not in cols:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN color_mode TEXT NOT NULL DEFAULT 'solid'"))
+            conn.execute(text(
+                f"UPDATE {table} SET color_mode = 'multicolor' "
+                "WHERE color2_hex IS NOT NULL AND color2_hex != ''"
+            ))
+            conn.commit()
+            log.info("Migration: added %s.color_mode", table)
+        if "color_effect" not in cols:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN color_effect TEXT"))
+            conn.commit()
+            log.info("Migration: added %s.color_effect", table)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create tables
@@ -414,6 +438,8 @@ async def lifespan(app: FastAPI):
                 conn.execute(text(f"ALTER TABLE filament_catalog ADD COLUMN {_col} TEXT"))
                 conn.commit()
                 log.info("Migration: added filament_catalog.%s", _col)
+
+        migrate_color_look(conn, insp)
 
     log.info("Database ready")
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..util import utcnow
+from ..util import normalize_color_look, utcnow
 from ..models import BrandSpoolWeight, FilamentSubtype, FilamentMaterial, FilamentBrand, PurchaseLocation, StorageLocation, FilamentCatalog, UserPreferences
 from ..schemas import BrandSpoolWeightOut, FilamentCatalogCreate, FilamentCatalogUpdate, FilamentCatalogOut
 
@@ -500,6 +500,7 @@ def list_filament_catalog(db: Session = Depends(get_db)):
 @router.post("/filament-catalog", response_model=FilamentCatalogOut, status_code=201)
 def create_filament_catalog(body: FilamentCatalogCreate, db: Session = Depends(get_db)):
     entry = FilamentCatalog(**body.model_dump())
+    normalize_color_look(entry)
     db.add(entry)
     db.commit()
     db.refresh(entry)
@@ -507,7 +508,7 @@ def create_filament_catalog(body: FilamentCatalogCreate, db: Session = Depends(g
 
 
 _PROPAGATE_FIELDS = ("brand", "material", "subtype", "subtype2", "color_name", "color_hex",
-                     "color2_hex", "color3_hex", "color4_hex")
+                     "color2_hex", "color3_hex", "color4_hex", "color_mode", "color_effect")
 
 
 @router.patch("/filament-catalog/{entry_id}", response_model=FilamentCatalogOut)
@@ -522,6 +523,11 @@ def update_filament_catalog(entry_id: int, body: FilamentCatalogUpdate, db: Sess
     old_values = {k: getattr(entry, k) for k in _PROPAGATE_FIELDS}
     for field, value in updates.items():
         setattr(entry, field, value)
+    normalize_color_look(entry)
+    # compare propagation against the normalized values actually stored
+    for k in ("color_mode", "color_effect"):
+        if k in updates:
+            updates[k] = getattr(entry, k)
     db.commit()
     db.refresh(entry)
     if propagate and entry.article_number:

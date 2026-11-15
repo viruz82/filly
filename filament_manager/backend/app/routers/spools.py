@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..util import utcnow
+from ..util import normalize_color_look, utcnow
 from ..models import Spool, BrandSpoolWeight, FilamentSubtype, FilamentMaterial, SpoolAudit
 from ..schemas import SpoolCreate, SpoolOut, SpoolUpdate, SpoolAuditEntry
 from .. import moisture
@@ -68,6 +68,7 @@ def create_spool(body: SpoolCreate, db: Session = Depends(get_db)):
     if data.get("ams_slot") and data.get("packaging") == "original":
         data["packaging"] = "open"      # loaded into the AMS → no longer sealed
     spool = Spool(**data)
+    normalize_color_look(spool)
     db.add(spool)
     db.commit()
     db.refresh(spool)
@@ -141,6 +142,7 @@ def update_spool(spool_id: int, body: SpoolUpdate, background_tasks: BackgroundT
         setattr(spool, field, value)
     for field, value in explicit.items():      # migration: exact moisture state
         setattr(spool, field, bool(value) if field == "is_drying" else value)
+    normalize_color_look(spool)
     spool.updated_at = utcnow()
     if "current_weight_g" in updates:
         weight_after = spool.current_weight_g

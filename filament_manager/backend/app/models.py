@@ -34,6 +34,9 @@ class Spool(Base):
     color2_hex = Column(String, nullable=True)
     color3_hex = Column(String, nullable=True)
     color4_hex = Column(String, nullable=True)
+    # Colour look: solid | gradient | multicolor | special (see util.COLOR_MODES)
+    color_mode = Column(String, nullable=False, default="solid", server_default="solid")
+    color_effect = Column(String, nullable=True)   # only with mode "special": glitter | glow | thermo | marble
     diameter_mm = Column(Float, default=1.75)
 
     initial_weight_g = Column(Float, nullable=False)
@@ -288,6 +291,9 @@ class FilamentCatalog(Base):
     color2_hex = Column(String, nullable=True)
     color3_hex = Column(String, nullable=True)
     color4_hex = Column(String, nullable=True)
+    # Colour look: solid | gradient | multicolor | special (see util.COLOR_MODES)
+    color_mode = Column(String, nullable=False, default="solid", server_default="solid")
+    color_effect = Column(String, nullable=True)   # only with mode "special": glitter | glow | thermo | marble
     article_number = Column(String, nullable=True)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
