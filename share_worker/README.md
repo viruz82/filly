@@ -11,20 +11,29 @@ Only these fields per spool, nothing else (checked in the add-on **and** again i
 
 | Field | Example |
 |---|---|
+| spool number | 38 |
 | brand, material, subtype | SUNLU, PLA, Matte |
 | colour name, colours (hex), colour mode, effect | Mint Green, `#00C7B1`, solid |
 | remaining in whole percent | 55 |
+| remaining and nominal weight in grams | 954 / 1000 |
 
-Never sent: prices, purchase and storage locations, notes, weights, article numbers, AMS slots,
-dates, ids, print history. Archived spools are left out.
+The grams are stored in the Worker, but a link shows them only when its **Show weight** switch is on
+(default on for new links; links created with 1.20.0 keep showing percent only until you switch it on).
+A link can also be limited to certain **brands and materials**: the Worker applies that filter before
+anything is rendered, so filtered-out spools never reach the page or its drop-downs.
+
+Never sent: prices, purchase and storage locations, notes, article numbers, AMS slots, dates, ids,
+print history. Archived spools are left out.
 
 ## How it works
 
 - One Durable Object (SQLite, available on the Workers Free plan) stores the latest snapshot,
   the links and their view counters.
 - Public page: `GET /s/<id>`. The id is 128 random bits. Unknown, switched-off and expired links
-  all get the same 404 page. The page is rendered on the server, with no JavaScript, cookies or
-  external resources, and is marked `noindex`. Visitor IP addresses are not stored.
+  all get the same 404 page. The page is rendered on the server, uses no cookies or external
+  resources, can not be framed and is marked `noindex`. One small inline script (search field and
+  drop-downs) is allowed by the Content-Security-Policy through its hash and nothing else may run;
+  without it the page stays fully readable. Visitor IP addresses are not stored.
 - Management API under `/api/*`, only with `Authorization: Bearer <PUSH_KEY>`.
   Filly calls it from its backend; the key never reaches a browser.
 
@@ -33,12 +42,14 @@ dates, ids, print history. Archived spools are left out.
 | GET | `/api/health` | key check |
 | PUT | `/api/snapshot` | replace the snapshot |
 | GET | `/api/links` | links with view counters |
-| POST | `/api/links` | new link (`name`, `expires_at`, `hide_empty`, `lang`) |
-| PATCH | `/api/links/<id>` | change name, expiry, active, hide empty, language |
+| POST | `/api/links` | new link (`name`, `expires_at`, `hide_empty`, `lang`, `show_weight`, `brands`, `materials`) |
+| PATCH | `/api/links/<id>` | change any of those fields and `active` |
 | POST | `/api/links/<id>/renew` | new address, old one stops working |
 | DELETE | `/api/links/<id>` | remove |
 
 ## Deploy
+
+Step-by-step guide for beginners: [docs/SHARE.md](../docs/SHARE.md).
 
 Requirements: a free Cloudflare account with a `workers.dev` subdomain, Node.js 22.12 or newer.
 
