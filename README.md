@@ -59,6 +59,11 @@ Screenshots show demo data, not a real inventory.
 ![Projects](filament_manager/docs/projects.png)
 ![Maintenance](filament_manager/docs/maintenance.png)
 
+**Share collection (optional, [guide](docs/SHARE.md))**: the dialog with links, and the public page a visitor sees
+
+![Share dialog](filament_manager/docs/share-dialog.png)
+![Public page](filament_manager/docs/share-page.png)
+
 **On the phone** (bottom navigation, list, detail sheet)
 
 <img src="filament_manager/docs/m-dashboard.png" width="240"> <img src="filament_manager/docs/m-printers.png" width="240"> <img src="filament_manager/docs/m-spools.png" width="240"> <img src="filament_manager/docs/m-detail.png" width="240">

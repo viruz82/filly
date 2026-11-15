@@ -14,6 +14,12 @@ Home Assistant (Filly)  ──sends cleaned copy──▶  your Cloudflare Worke
 
 This guide takes about 15 minutes. You need no server and no domain of your own.
 
+What a visitor sees (demo data, light/dark follows the visitor's device):
+
+![Public page](../filament_manager/docs/share-page.png)
+
+On the phone: <img src="../filament_manager/docs/m-share-page.png" width="240"> <img src="../filament_manager/docs/m-share-dialog.png" width="240">
+
 ## What is shared and what is not
 
 Only these fields per spool leave your Home Assistant (checked in Filly **and** again in the Worker):
@@ -110,6 +116,8 @@ not in the JSON export and never reaches your browser.
    - **Show weight**: grams as `954 g / 1,000 g`; off = percent only
    - **Share only certain filaments**: pick brands and/or materials; empty = everything
 4. **Create link**. The address is copied. Send it to whoever should see your collection.
+
+![Share dialog with the New link form](../filament_manager/docs/share-new-link.png)
 
 Later you can switch a link off, change its options, create a **New address** (the old one stops working
 and the counter restarts), or delete it. The dialog also shows how often and when a link was last viewed.
