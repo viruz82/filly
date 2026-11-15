@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.20.0
+
+- **Share collection**: public, read-only links to the spool collection, like "share collection" in other spool apps. Spools page: button "Share" opens a dialog with all links (name, address with copy and open, active switch, "hide empty spools", view counter with last view, expiry, page language), "New link" (name, expiry never / 1 / 7 / 30 / 90 days, language), "New address" (old address stops working, counter restarts), delete, "Upload now" and a preview of exactly the shared data.
+- Privacy: Home Assistant and Filly are never reachable from outside. The backend sends a cleaned copy to a Cloudflare Worker you deploy yourself (`share_worker/`, Workers Free plan with one Durable Object): only brand, material, subtype, colour name, colours, colour mode/effect and remaining percent; never prices, purchase or storage locations, notes, weights, article numbers, AMS slots, dates, ids or archived spools. The Worker checks the same whitelist again. Upload only when something changed, at most every 5 minutes.
+- Public page: rendered by the Worker without JavaScript, cookies or external resources, grouped by material, light and dark, `noindex`; unknown, switched-off and expired links all show the same "not available" page. Link ids carry 128 random bits.
+- Configuration: new optional add-on options `share_url` (Worker address) and `share_key` (password field, same as the Worker's `PUSH_KEY`). They live in the add-on options, not in the database, so the JSON export never contains the key. The browser never sees the key; all link actions go through `/api/share/*`.
+- Tests: 546 backend tests (30 new for whitelist, configuration, upload rules and routes), 14 Worker tests in the Workers runtime.
+
 ## 1.19.0
 
 - **Manufacturer colours**: a bundled colour library with 1,978 colours in 224 product lines of SUNLU, Bambu Lab, Polymaker, eSUN, Elegoo, Geeetech, ANYCUBIC, Jayo, TECBEARS and ERYONE, all materials. Each colour carries its source: **official** (1,069: the "Color Code" tables on the SUNLU product pages, the Polymaker wiki "HEX Codes and Transmission Distances" with SKU) or **community** (909: SpoolmanDB, MIT licence). For SUNLU the official value wins over the community value; SUNLU lines missing in SpoolmanDB (High Speed PLA+ / PLA+ 2.0, Twinkling, Metallic, PVA, PVB, PCL, APLA, ABS Transparent, PETG Transparent, PETG Glow …) come from the official pages; community duplicates of an official colour under another name are dropped.

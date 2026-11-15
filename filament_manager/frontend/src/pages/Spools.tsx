@@ -25,6 +25,7 @@ import { cleanColorLook } from '../components/ui/ColorLookFields'
 
 // Label dialog pulls in niimbluelib + qrcode; only load it when it is opened.
 const LabelModal = lazy(() => import('../components/LabelModal'))
+const ShareModal = lazy(() => import('../components/spools/ShareModal'))
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ export default function Spools() {
   // Label dialog: ids of the spools to print; labelPick = choose from the list
   const [labelIds, setLabelIds] = useState<number[] | null>(null)
   const [labelPick, setLabelPick] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const includeArchived = filter.quick === 'archived'
@@ -257,6 +259,7 @@ export default function Spools() {
         onInventory={downloadInventory}
         inventoryBusy={inventoryBusy}
         onLabels={() => { setLabelPick(true); setLabelIds([]) }}
+        onShare={() => setShowShare(true)}
         total={shown.length}
         kg={totalKg}
         value={totalValue}
@@ -293,6 +296,16 @@ export default function Spools() {
             initialIds={labelIds}
             onClose={() => { setLabelIds(null); setLabelPick(false) }}
           />
+          </Suspense>
+        </Modal>
+      )}
+
+      {showShare && (
+        <Modal>
+          <Suspense fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"><Spinner className="" /></div>
+          }>
+            <ShareModal onClose={() => setShowShare(false)} />
           </Suspense>
         </Modal>
       )}

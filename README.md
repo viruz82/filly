@@ -2,7 +2,7 @@
 
 *Your filament friend.* A Home Assistant add-on for tracking 3D printer filament inventory, monitoring print history, and calculating material costs. Integrates natively with Bambu Lab printers via **Bambu Lab Cloud (MQTT)**.
 
-![Version](https://img.shields.io/badge/version-1.19.0-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
+![Version](https://img.shields.io/badge/version-1.20.0-blue) ![Platform](https://img.shields.io/badge/platform-Home%20Assistant-teal)
 
 > **Fork notice:** This is a personal fork of [cgradl/filament-manager](https://github.com/cgradl/filament-manager) (MIT, based on v0.41.3). It uses its own version series starting at 1.0.0 and is installed as a separate add-on ("Filly", formerly "Filament Manager (Fork)"). All credit for the original add-on goes to cgradl; fixes that fit the original are offered back upstream as pull requests.
 
@@ -79,6 +79,7 @@ Screenshots show demo data, not a real inventory.
 - **AMS spool auto-match** and tray assignment from the spool list; the dashboard asks "Which spool is in AMS 1 · T1?" with ranked candidates (colour compared by perceptual distance, product lines like "PLA+ 2.0" fit the printer's "PLA") and one-click "Assign"
 - **Colour modes** — single colour, gradient, multi-colour (dual/tri) and special (glitter, glow, colour change, marble), shown as disc and bar everywhere
 - **Manufacturer colours** — about 2,000 bundled colours of SUNLU, Bambu Lab, Polymaker, eSUN, Elegoo, Geeetech, ANYCUBIC, Jayo, TECBEARS and ERYONE (search, brand and material filter); one tap fills brand, material, subtype and colour look into the spool form, or several at once go into the filament catalog. Every colour is marked **official** (manufacturer's own page) or **community** (SpoolmanDB)
+- **Share collection** (optional) — public read-only links to your spools (name, expiry, on/off, view counter, hide empty spools), served by a small Cloudflare Worker you deploy yourself ([share_worker](share_worker/README.md)). Home Assistant stays unreachable from outside; Filly only sends brand, material, subtype, colour and remaining percent, never prices, locations or notes
 - **Filament catalog** with CSV import/export, brand spool weights, optional Bambu Lab filament sync (experimental)
 - **Print projects** — group prints (production and test prints) with aggregated time, filament, cost and energy
 - **Print history** with search and date filter, description and model URL

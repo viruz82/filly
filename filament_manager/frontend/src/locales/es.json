@@ -999,5 +999,74 @@
       "20": "Pausa: temperatura de boquilla",
       "21": "Pausa: temperatura de cama"
     }
+  },
+  "share": {
+    "title": "Compartir colección",
+    "button": "Compartir",
+    "intro": "Un enlace público de solo lectura a tu colección de bobinas. Home Assistant sigue sin ser accesible desde fuera: Filly solo envía una copia depurada a tu Worker.",
+    "sharedFields": "Solo se comparten marca, material, subtipo, nombre del color, colores y porcentaje restante. Nunca: precios, ubicaciones, tiendas, notas, pesos, fechas ni bobinas archivadas.",
+    "preview": "Vista previa de los datos compartidos",
+    "col": {
+      "color": "Color",
+      "brand": "Marca",
+      "material": "Material",
+      "rest": "Resto"
+    },
+    "lastPush_one": "Última subida: {{time}} · {{count}} bobina",
+    "lastPush_other": "Última subida: {{time}} · {{count}} bobinas",
+    "neverPushed": "Aún no subido",
+    "pushNow": "Subir ahora",
+    "pushed": "Subido",
+    "setupTitle": "Aún no configurado",
+    "setupHint": "Introduce la dirección de tu Worker (share_url) y la clave (share_key) en la configuración del complemento. Instrucciones: carpeta share_worker del repositorio.",
+    "newLink": "Nuevo enlace",
+    "name": "Nombre",
+    "defaultName": "Mis bobinas",
+    "expires": "Caducidad",
+    "expiry": {
+      "never": "Nunca",
+      "d1": "1 día",
+      "d7": "7 días",
+      "d30": "30 días",
+      "d90": "90 días",
+      "keep": "Sin cambios"
+    },
+    "hideEmpty": "Ocultar bobinas vacías",
+    "pageLang": "Idioma de la página",
+    "create": "Crear enlace",
+    "created": "Enlace creado",
+    "createdCopied": "Enlace creado y copiado",
+    "noLinks": "Aún no hay enlaces.",
+    "active": "Enlace activo",
+    "state": {
+      "active": "activo",
+      "off": "desactivado",
+      "expired": "caducado"
+    },
+    "views_one": "{{count}} visita",
+    "views_other": "{{count}} visitas",
+    "lastView": "última {{time}}",
+    "expiresAt": "caduca {{time}}",
+    "expiredAt": "caducó {{time}}",
+    "noExpiry": "sin caducidad",
+    "copy": "Copiar enlace",
+    "copied": "Enlace copiado",
+    "open": "Abrir",
+    "renew": "Nueva dirección",
+    "renewConfirm": "¿Crear una nueva dirección para «{{name}}»?",
+    "renewMessage": "La dirección anterior deja de funcionar y el contador vuelve a 0.",
+    "deleteConfirm": "¿Eliminar el enlace «{{name}}»?",
+    "deleteMessage": "La dirección deja de funcionar.",
+    "errors": {
+      "not_configured": "Compartir aún no está configurado.",
+      "invalid_url": "La dirección del Worker en la configuración no es válida (https://… sin ruta).",
+      "invalid_key": "La clave de la configuración es demasiado corta (mínimo 32 caracteres).",
+      "unreachable": "No se puede contactar con el Worker.",
+      "key_rejected": "El Worker rechaza la clave.",
+      "worker_error": "El Worker informa de un error.",
+      "too_many_links": "Como máximo 20 enlaces.",
+      "not_found": "Enlace no encontrado.",
+      "unknown": "Error: {{msg}}"
+    }
   }
 }

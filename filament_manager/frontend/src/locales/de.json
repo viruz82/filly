@@ -999,5 +999,74 @@
       "20": "Pausiert: Düsentemperatur",
       "21": "Pausiert: Betttemperatur"
     }
+  },
+  "share": {
+    "title": "Sammlung teilen",
+    "button": "Teilen",
+    "intro": "Ein öffentlicher, nur lesbarer Link zu deiner Spulen-Sammlung. Home Assistant bleibt von außen unerreichbar: Filly schickt nur eine bereinigte Kopie an deinen Share-Worker.",
+    "sharedFields": "Geteilt werden nur Hersteller, Material, Untertyp, Farbname, Farben und Rest in Prozent. Nie: Preise, Lagerorte, Kaufquellen, Notizen, Gewichte, Daten und archivierte Spulen.",
+    "preview": "Vorschau der geteilten Daten",
+    "col": {
+      "color": "Farbe",
+      "brand": "Hersteller",
+      "material": "Material",
+      "rest": "Rest"
+    },
+    "lastPush_one": "Zuletzt übertragen: {{time}} · {{count}} Spule",
+    "lastPush_other": "Zuletzt übertragen: {{time}} · {{count}} Spulen",
+    "neverPushed": "Noch nicht übertragen",
+    "pushNow": "Jetzt übertragen",
+    "pushed": "Übertragen",
+    "setupTitle": "Noch nicht eingerichtet",
+    "setupHint": "Trage in der Konfiguration des Add-ons die Adresse deines Share-Workers (share_url) und den Schlüssel (share_key) ein. Anleitung: Ordner share_worker im Repository.",
+    "newLink": "Neuer Link",
+    "name": "Name",
+    "defaultName": "Meine Spulen",
+    "expires": "Ablauf",
+    "expiry": {
+      "never": "Nie",
+      "d1": "1 Tag",
+      "d7": "7 Tage",
+      "d30": "30 Tage",
+      "d90": "90 Tage",
+      "keep": "Unverändert"
+    },
+    "hideEmpty": "Leere Spulen ausblenden",
+    "pageLang": "Sprache der Seite",
+    "create": "Link erstellen",
+    "created": "Link erstellt",
+    "createdCopied": "Link erstellt und kopiert",
+    "noLinks": "Noch keine Links.",
+    "active": "Link ist aktiv",
+    "state": {
+      "active": "aktiv",
+      "off": "aus",
+      "expired": "abgelaufen"
+    },
+    "views_one": "{{count}} Aufruf",
+    "views_other": "{{count}} Aufrufe",
+    "lastView": "zuletzt {{time}}",
+    "expiresAt": "läuft ab {{time}}",
+    "expiredAt": "abgelaufen {{time}}",
+    "noExpiry": "kein Ablauf",
+    "copy": "Link kopieren",
+    "copied": "Link kopiert",
+    "open": "Öffnen",
+    "renew": "Neue Adresse",
+    "renewConfirm": "Neue Adresse für „{{name}}“ erstellen?",
+    "renewMessage": "Die bisherige Adresse funktioniert danach nicht mehr, der Zähler beginnt wieder bei 0.",
+    "deleteConfirm": "Link „{{name}}“ löschen?",
+    "deleteMessage": "Die Adresse funktioniert danach nicht mehr.",
+    "errors": {
+      "not_configured": "Teilen ist noch nicht eingerichtet.",
+      "invalid_url": "Die Worker-Adresse in der Add-on-Konfiguration ist ungültig (https://… ohne Pfad).",
+      "invalid_key": "Der Schlüssel in der Add-on-Konfiguration ist zu kurz (mindestens 32 Zeichen).",
+      "unreachable": "Der Share-Worker ist nicht erreichbar.",
+      "key_rejected": "Der Share-Worker lehnt den Schlüssel ab.",
+      "worker_error": "Der Share-Worker meldet einen Fehler.",
+      "too_many_links": "Es sind höchstens 20 Links möglich.",
+      "not_found": "Link nicht gefunden.",
+      "unknown": "Fehler: {{msg}}"
+    }
   }
 }

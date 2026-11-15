@@ -999,5 +999,74 @@
       "20": "Paused: nozzle temperature",
       "21": "Paused: bed temperature"
     }
+  },
+  "share": {
+    "title": "Share collection",
+    "button": "Share",
+    "intro": "A public, read-only link to your spool collection. Home Assistant stays unreachable from outside: Filly only sends a cleaned copy to your share Worker.",
+    "sharedFields": "Only brand, material, subtype, colour name, colours and remaining percent are shared. Never: prices, storage locations, shops, notes, weights, dates or archived spools.",
+    "preview": "Preview of the shared data",
+    "col": {
+      "color": "Colour",
+      "brand": "Brand",
+      "material": "Material",
+      "rest": "Left"
+    },
+    "lastPush_one": "Last upload: {{time}} · {{count}} spool",
+    "lastPush_other": "Last upload: {{time}} · {{count}} spools",
+    "neverPushed": "Not uploaded yet",
+    "pushNow": "Upload now",
+    "pushed": "Uploaded",
+    "setupTitle": "Not set up yet",
+    "setupHint": "Enter the address of your share Worker (share_url) and the key (share_key) in the add-on configuration. Instructions: folder share_worker in the repository.",
+    "newLink": "New link",
+    "name": "Name",
+    "defaultName": "My spools",
+    "expires": "Expires",
+    "expiry": {
+      "never": "Never",
+      "d1": "1 day",
+      "d7": "7 days",
+      "d30": "30 days",
+      "d90": "90 days",
+      "keep": "Unchanged"
+    },
+    "hideEmpty": "Hide empty spools",
+    "pageLang": "Page language",
+    "create": "Create link",
+    "created": "Link created",
+    "createdCopied": "Link created and copied",
+    "noLinks": "No links yet.",
+    "active": "Link is active",
+    "state": {
+      "active": "active",
+      "off": "off",
+      "expired": "expired"
+    },
+    "views_one": "{{count}} view",
+    "views_other": "{{count}} views",
+    "lastView": "last {{time}}",
+    "expiresAt": "expires {{time}}",
+    "expiredAt": "expired {{time}}",
+    "noExpiry": "no expiry",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "open": "Open",
+    "renew": "New address",
+    "renewConfirm": "Create a new address for \"{{name}}\"?",
+    "renewMessage": "The old address stops working and the counter starts again at 0.",
+    "deleteConfirm": "Delete link \"{{name}}\"?",
+    "deleteMessage": "The address stops working.",
+    "errors": {
+      "not_configured": "Sharing is not set up yet.",
+      "invalid_url": "The Worker address in the add-on configuration is invalid (https://… without a path).",
+      "invalid_key": "The key in the add-on configuration is too short (at least 32 characters).",
+      "unreachable": "The share Worker cannot be reached.",
+      "key_rejected": "The share Worker rejects the key.",
+      "worker_error": "The share Worker reports an error.",
+      "too_many_links": "At most 20 links are possible.",
+      "not_found": "Link not found.",
+      "unknown": "Error: {{msg}}"
+    }
   }
 }

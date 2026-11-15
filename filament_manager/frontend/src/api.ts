@@ -217,6 +217,20 @@ export const api = {
     request<{ added: number; skipped: number; ids: number[]; lists_added: Record<string, string[]> }>(
       'color-library/to-catalog', { method: 'POST', body: JSON.stringify({ items }) }),
 
+  // Share the collection (1.20.0)
+  getShareStatus: () => request<import('./types').ShareStatus>('share/status'),
+  getShareLinks: () => request<import('./types').ShareLinkList>('share/links'),
+  getSharePreview: () => request<import('./types').ShareSnapshot>('share/preview'),
+  pushShare: () => request<import('./types').ShareStatus>('share/push', { method: 'POST' }),
+  createShareLink: (data: import('./types').ShareLinkInput) =>
+    request<import('./types').ShareLink>('share/links', { method: 'POST', body: JSON.stringify(data) }),
+  updateShareLink: (id: string, data: import('./types').ShareLinkInput) =>
+    request<import('./types').ShareLink>(`share/links/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  renewShareLink: (id: string) =>
+    request<import('./types').ShareLink>(`share/links/${encodeURIComponent(id)}/renew`, { method: 'POST' }),
+  deleteShareLink: (id: string) =>
+    request<{ ok: boolean }>(`share/links/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
   // Version / Changelog
   getVersion: () => request<{ version: string }>('settings/version'),
   getChangelog: () => request<{ changelog: string }>('settings/changelog'),

@@ -1,7 +1,7 @@
 // One bar for both spool views: search, filter chips, material / location filters,
 // view switch, sort (tiles + phone), add button and the "⋯" menu (inventory, labels).
 import { useTranslation } from 'react-i18next'
-import { Search, X, LayoutGrid, List, Plus, Ellipsis, FileDown, QrCode, Loader2, ArrowDownUp } from 'lucide-react'
+import { Search, X, LayoutGrid, List, Plus, Ellipsis, FileDown, QrCode, Loader2, ArrowDownUp, Share2 } from 'lucide-react'
 import Menu from '../ui/Menu'
 import { fmtNum } from '../../utils/number'
 import type { QuickFilter, SortKey, SortState, SpoolFilter } from './spoolFilters'
@@ -13,7 +13,7 @@ export interface Counts { all: number; moist: number; low: number; ams: number }
 
 export default function SpoolToolbar({
   filter, onFilter, counts, materials, locations, view, onView, sort, onSort,
-  onAdd, onInventory, inventoryBusy, onLabels, total, kg, value, fmtCurrency,
+  onAdd, onInventory, inventoryBusy, onLabels, onShare, total, kg, value, fmtCurrency,
 }: {
   filter: SpoolFilter
   onFilter: (f: SpoolFilter) => void
@@ -28,6 +28,7 @@ export default function SpoolToolbar({
   onInventory: () => void
   inventoryBusy: boolean
   onLabels: () => void
+  onShare: () => void
   total: number
   kg: number
   value: number
@@ -79,6 +80,11 @@ export default function SpoolToolbar({
               title={t('spools.viewList')} aria-label={t('spools.viewList')} aria-pressed={view === 'table'}
             ><List size={14} /><span className="hidden lg:inline">{t('spools.viewListShort')}</span></button>
           </div>
+          <button
+            className="btn-ghost shrink-0 flex items-center gap-1.5 !px-2"
+            onClick={onShare}
+            title={t('share.title')} aria-label={t('share.title')}
+          ><Share2 size={16} /><span className="hidden lg:inline">{t('share.button')}</span></button>
           <Menu
             label={t('nav.more')}
             triggerClassName="p-2 text-gray-300"

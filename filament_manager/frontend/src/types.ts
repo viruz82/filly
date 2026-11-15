@@ -530,3 +530,62 @@ export interface LibraryPick {
   color_effect: ColorEffect | null
   article_number: string | null
 }
+
+// ── Share the collection (1.20.0) ────────────────────────────────────────────
+
+export type ShareLang = 'de' | 'en' | 'es'
+
+export interface ShareStatus {
+  configured: boolean
+  problem: string | null
+  base_url: string | null
+  last_push_at: string | null
+  last_error: string | null
+  spool_count: number | null
+}
+
+export interface ShareLink {
+  id: string
+  name: string
+  active: boolean
+  expires_at: string | null
+  hide_empty: boolean
+  lang: ShareLang
+  views: number
+  last_view_at: string | null
+  created_at: string
+  url: string
+}
+
+export interface ShareLinkList {
+  snapshot_received_at: string | null
+  snapshot_generated_at: string | null
+  spool_count: number
+  links: ShareLink[]
+}
+
+export interface SharedSpool {
+  brand: string
+  material: string
+  subtype: string | null
+  color_name: string
+  colors: string[]
+  color_mode: string
+  color_effect: string | null
+  remaining_pct: number
+}
+
+export interface ShareSnapshot {
+  generated_at: string
+  low_pct: number
+  empty_pct: number
+  spools: SharedSpool[]
+}
+
+export interface ShareLinkInput {
+  name?: string
+  expires_at?: string | null
+  hide_empty?: boolean
+  active?: boolean
+  lang?: ShareLang
+}

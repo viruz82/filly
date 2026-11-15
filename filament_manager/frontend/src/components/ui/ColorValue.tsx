@@ -5,7 +5,7 @@ import { Copy } from 'lucide-react'
 import { hexLabel, hexToRgb, rgbCopyText, rgbLabel } from '../../utils/color'
 import { useToast } from './Feedback'
 
-async function copyText(text: string): Promise<boolean> {
+export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text)
     return true
