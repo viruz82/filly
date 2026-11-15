@@ -1004,7 +1004,7 @@
     "title": "Share collection",
     "button": "Share",
     "intro": "A public, read-only link to your spool collection. Home Assistant stays unreachable from outside: Filly only sends a cleaned copy to your share Worker.",
-    "sharedFields": "Only brand, material, subtype, colour name, colours and remaining percent are shared. Never: prices, storage locations, shops, notes, weights, dates or archived spools.",
+    "sharedFields": "Only spool number, brand, material, subtype, colour name, colours, remaining percent and grams are shared (the page shows grams only when “Show weight” is on). Never: prices, storage locations, shops, article numbers, notes, dates or archived spools.",
     "preview": "Preview of the shared data",
     "col": {
       "color": "Colour",
@@ -1032,6 +1032,13 @@
       "keep": "Unchanged"
     },
     "hideEmpty": "Hide empty spools",
+    "showWeight": "Show weight",
+    "showWeightHint": "Remaining and nominal weight in grams, e.g. 954 g / 1,000 g. Off: percent only.",
+    "onlySome": "Share only certain filaments",
+    "onlySomeHint": "Filter by brand or material. Everything else stays invisible on this link.",
+    "filterNone": "Nothing selected: everything is shared.",
+    "filterCount": "{{count}} of {{total}} spools are shared.",
+    "filteredBy": "Only: {{list}}",
     "pageLang": "Page language",
     "create": "Create link",
     "created": "Link created",

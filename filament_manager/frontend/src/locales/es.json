@@ -1004,7 +1004,7 @@
     "title": "Compartir colección",
     "button": "Compartir",
     "intro": "Un enlace público de solo lectura a tu colección de bobinas. Home Assistant sigue sin ser accesible desde fuera: Filly solo envía una copia depurada a tu Worker.",
-    "sharedFields": "Solo se comparten marca, material, subtipo, nombre del color, colores y porcentaje restante. Nunca: precios, ubicaciones, tiendas, notas, pesos, fechas ni bobinas archivadas.",
+    "sharedFields": "Solo se comparten número de bobina, marca, material, subtipo, nombre del color, colores, porcentaje restante y gramos (la página muestra los gramos solo si “Mostrar peso” está activado). Nunca: precios, ubicaciones, tiendas, números de artículo, notas ni fechas ni bobinas archivadas.",
     "preview": "Vista previa de los datos compartidos",
     "col": {
       "color": "Color",
@@ -1032,6 +1032,13 @@
       "keep": "Sin cambios"
     },
     "hideEmpty": "Ocultar bobinas vacías",
+    "showWeight": "Mostrar peso",
+    "showWeightHint": "Peso restante y nominal en gramos, p. ej. 954 g / 1.000 g. Desactivado: solo porcentaje.",
+    "onlySome": "Compartir solo ciertos filamentos",
+    "onlySomeHint": "Filtra por marca o material. Todo lo demás queda invisible en este enlace.",
+    "filterNone": "Nada seleccionado: se comparte todo.",
+    "filterCount": "Se comparten {{count}} de {{total}} bobinas.",
+    "filteredBy": "Solo: {{list}}",
     "pageLang": "Idioma de la página",
     "create": "Crear enlace",
     "created": "Enlace creado",

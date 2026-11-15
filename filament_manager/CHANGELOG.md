@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.21.0
+
+- **Share page redesigned**: stat row (spools, total weight, colours, brands), search field and drop-downs for material and brand, cards with the **spool number** (`#38`, so someone can simply tell you which spool to print with), subtype and effect badges, brand, **grams** (`954 g / 1,000 g`) and the fill bar. The material groups stay. Search and drop-downs use one small inline script; without it the page stays fully readable. The Content-Security-Policy allows exactly that one script (hash) and nothing else; the page still cannot be framed and loads nothing external.
+- **Share only certain filaments**: the dialog has a switch "Share only certain filaments" with brand and material chips (empty selection = everything, a counter shows how many spools are shared). It can be changed later in the edit panel and is shown on the link card. The filter is applied in the Worker before anything is rendered: hidden spools never reach the page or its drop-downs.
+- **Show weight**: new per-link switch (default on). Off = percent only and no total weight, as in 1.20.0. Links created with 1.20.0 keep their look (no filter, percent only) until you switch it on.
+- Data sent to the Worker now also contains the spool number and the remaining/nominal weight in grams (never prices, purchase or storage locations, notes, article numbers, AMS slots, dates or archived spools). The Worker bounds and checks the new fields too.
+- Tests: 20 Worker tests (6 new: filters, grams, number, search tools, policy hash) and 33 backend share tests (3 new).
+
 ## 1.20.0
 
 - **Share collection**: public, read-only links to the spool collection, like "share collection" in other spool apps. Spools page: button "Share" opens a dialog with all links (name, address with copy and open, active switch, "hide empty spools", view counter with last view, expiry, page language), "New link" (name, expiry never / 1 / 7 / 30 / 90 days, language), "New address" (old address stops working, counter restarts), delete, "Upload now" and a preview of exactly the shared data.

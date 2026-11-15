@@ -49,6 +49,93 @@ function Swatch({ s }: { s: SharedSpool }) {
   return <span className="inline-block w-4 h-4 rounded-full border border-surface-4 shrink-0" style={{ background: bg }} />
 }
 
+/** What the link shows: brand / material filters (empty list = everything) and the gram switch. */
+interface ShareOpts { showWeight: boolean; filterOn: boolean; brands: string[]; materials: string[] }
+
+const DEFAULT_OPTS: ShareOpts = { showWeight: true, filterOn: false, brands: [], materials: [] }
+
+function optsOf(link: ShareLink): ShareOpts {
+  return {
+    showWeight: link.show_weight,
+    filterOn: link.brands.length + link.materials.length > 0,
+    brands: link.brands,
+    materials: link.materials,
+  }
+}
+
+function optsToInput(o: ShareOpts): Pick<ShareLinkInput, 'brands' | 'materials' | 'show_weight'> {
+  return { brands: o.filterOn ? o.brands : [], materials: o.filterOn ? o.materials : [], show_weight: o.showWeight }
+}
+
+const sameText = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
+
+function inFilter(s: SharedSpool, brands: string[], materials: string[]): boolean {
+  return (brands.length === 0 || brands.some(b => sameText(b, s.brand)))
+    && (materials.length === 0 || materials.some(m => sameText(m, s.material)))
+}
+
+function uniqueSorted(list: string[]): string[] {
+  const seen = new Map<string, string>()
+  for (const x of list) if (x && !seen.has(x.toLowerCase())) seen.set(x.toLowerCase(), x)
+  return [...seen.values()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }))
+}
+
+function useShareSpools(enabled: boolean): SharedSpool[] {
+  const { data } = useQuery({ queryKey: ['share-preview'], queryFn: api.getSharePreview, enabled })
+  return data?.spools ?? []
+}
+
+function Chips({ label, all, picked, onToggle }: { label: string; all: string[]; picked: string[]; onToggle: (v: string) => void }) {
+  if (all.length === 0) return null
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="label">{label}</span>
+      <div className="flex flex-wrap gap-1.5">
+        {all.map(x => {
+          const on = picked.some(p => sameText(p, x))
+          return (
+            <button key={x} type="button" aria-pressed={on} onClick={() => onToggle(x)}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${on ? 'bg-accent/20 border-accent text-accent' : 'border-surface-4 text-gray-300 hover:border-gray-500'}`}>
+              {x}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ShareOptions({ opts, setOpts, spools }: { opts: ShareOpts; setOpts: (o: ShareOpts) => void; spools: SharedSpool[] }) {
+  const { t } = useTranslation()
+  const brands = uniqueSorted(spools.map(s => s.brand))
+  const materials = uniqueSorted(spools.map(s => s.material))
+  const shown = spools.filter(s => inFilter(s, opts.filterOn ? opts.brands : [], opts.filterOn ? opts.materials : [])).length
+  const toggle = (list: string[], v: string) => list.some(x => sameText(x, v)) ? list.filter(x => !sameText(x, v)) : [...list, v]
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-0.5">
+        <Switch on={opts.showWeight} label={t('share.showWeight')} onChange={v => setOpts({ ...opts, showWeight: v })} />
+        <span className="text-xs text-gray-500 pl-11">{t('share.showWeightHint')}</span>
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <Switch on={opts.filterOn} label={t('share.onlySome')} onChange={v => setOpts({ ...opts, filterOn: v })} />
+        <span className="text-xs text-gray-500 pl-11">{t('share.onlySomeHint')}</span>
+      </div>
+      {opts.filterOn && (
+        <div className="rounded-lg bg-surface-3/40 p-2.5 flex flex-col gap-3">
+          <Chips label={t('share.col.brand')} all={brands} picked={opts.brands} onToggle={v => setOpts({ ...opts, brands: toggle(opts.brands, v) })} />
+          <Chips label={t('share.col.material')} all={materials} picked={opts.materials} onToggle={v => setOpts({ ...opts, materials: toggle(opts.materials, v) })} />
+          <p className="text-xs text-gray-400">
+            {opts.brands.length + opts.materials.length === 0
+              ? t('share.filterNone')
+              : t('share.filterCount', { count: shown, total: spools.length })}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Preview() {
   const { t } = useTranslation()
   const { data, isLoading } = useQuery({ queryKey: ['share-preview'], queryFn: api.getSharePreview })
@@ -58,6 +145,7 @@ function Preview() {
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-surface-2">
           <tr className="text-left text-gray-400">
+            <th className="px-2 py-1.5">#</th>
             <th className="px-2 py-1.5">{t('share.col.color')}</th>
             <th className="px-2 py-1.5">{t('share.col.brand')}</th>
             <th className="px-2 py-1.5">{t('share.col.material')}</th>
@@ -67,10 +155,11 @@ function Preview() {
         <tbody>
           {data.spools.map((s, i) => (
             <tr key={i} className="border-t border-surface-3/50">
+              <td className="px-2 py-1 tabular-nums text-gray-400">{s.number}</td>
               <td className="px-2 py-1"><span className="flex items-center gap-1.5"><Swatch s={s} /><span className="truncate">{s.color_name}</span></span></td>
               <td className="px-2 py-1 truncate">{s.brand}</td>
               <td className="px-2 py-1 truncate">{s.material}{s.subtype ? ` ${s.subtype}` : ''}</td>
-              <td className="px-2 py-1 text-right tabular-nums">{s.remaining_pct} %</td>
+              <td className="px-2 py-1 text-right tabular-nums whitespace-nowrap">{s.remaining_pct} % · {s.weight_g} / {s.spool_g} g</td>
             </tr>
           ))}
         </tbody>
@@ -109,7 +198,7 @@ function LinkFields({ name, setName, expiry, setExpiry, lang, setLang, withKeep 
   )
 }
 
-function LinkCard({ link, onError }: { link: ShareLink; onError: (e: unknown) => void }) {
+function LinkCard({ link, spools, onError }: { link: ShareLink; spools: SharedSpool[]; onError: (e: unknown) => void }) {
   const { t } = useTranslation()
   const tz = useHATZ()
   const qc = useQueryClient()
@@ -119,6 +208,7 @@ function LinkCard({ link, onError }: { link: ShareLink; onError: (e: unknown) =>
   const [name, setName] = useState(link.name)
   const [expiry, setExpiry] = useState<Expiry>('keep')
   const [lang, setLang] = useState<ShareLang>(link.lang)
+  const [opts, setOpts] = useState<ShareOpts>(optsOf(link))
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['share-links'] })
   const update = useMutation({
@@ -145,7 +235,7 @@ function LinkCard({ link, onError }: { link: ShareLink; onError: (e: unknown) =>
     if (await confirm({ title: t('share.deleteConfirm', { name: link.name }), message: t('share.deleteMessage'), danger: true })) remove.mutate()
   }
   const save = () => {
-    const data: ShareLinkInput = { name: name.trim(), lang }
+    const data: ShareLinkInput = { name: name.trim(), lang, ...optsToInput(opts) }
     const iso = expiryToIso(expiry)
     if (iso !== undefined) data.expires_at = iso
     update.mutate(data)
@@ -164,6 +254,11 @@ function LinkCard({ link, onError }: { link: ShareLink; onError: (e: unknown) =>
               : t('share.noExpiry')}</span>
             <span>{t(`lang.${link.lang}`)}</span>
           </div>
+          {(link.brands.length > 0 || link.materials.length > 0) && (
+            <div className="text-xs text-gray-400 mt-0.5 break-words">
+              {t('share.filteredBy', { list: [...link.brands, ...link.materials].join(', ') })}
+            </div>
+          )}
         </div>
         <span className={`text-[11px] px-2 py-0.5 rounded-full border shrink-0 ${stateClass}`}>{t(`share.state.${state}`)}</span>
       </div>
@@ -177,9 +272,10 @@ function LinkCard({ link, onError }: { link: ShareLink; onError: (e: unknown) =>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Switch on={link.active} label={t('share.active')} disabled={busy} onChange={v => update.mutate({ active: v })} />
         <Switch on={link.hide_empty} label={t('share.hideEmpty')} disabled={busy} onChange={v => update.mutate({ hide_empty: v })} />
+        <Switch on={link.show_weight} label={t('share.showWeight')} disabled={busy} onChange={v => update.mutate({ show_weight: v })} />
         <div className="ml-auto flex items-center gap-1">
           {busy && <Loader2 size={15} className="animate-spin text-gray-400" />}
-          <button className="btn-ghost p-2" onClick={() => setEditing(e => !e)} title={t('common.edit')} aria-label={t('common.edit')}><Pencil size={15} /></button>
+          <button className="btn-ghost p-2" onClick={() => { if (!editing) setOpts(optsOf(link)); setEditing(e => !e) }} title={t('common.edit')} aria-label={t('common.edit')}><Pencil size={15} /></button>
           <button className="btn-ghost p-2" onClick={askRenew} disabled={busy} title={t('share.renew')} aria-label={t('share.renew')}><RefreshCw size={15} /></button>
           <button className="btn-ghost p-2 text-crit" onClick={askDelete} disabled={busy} title={t('common.delete')} aria-label={t('common.delete')}><Trash2 size={15} /></button>
         </div>
@@ -188,6 +284,7 @@ function LinkCard({ link, onError }: { link: ShareLink; onError: (e: unknown) =>
       {editing && (
         <div className="flex flex-col gap-2 border-t border-surface-3 pt-2">
           <LinkFields name={name} setName={setName} expiry={expiry} setExpiry={setExpiry} lang={lang} setLang={setLang} withKeep />
+          <ShareOptions opts={opts} setOpts={setOpts} spools={spools} />
           <div className="flex justify-end gap-2">
             <button className="btn-ghost" onClick={() => setEditing(false)}>{t('common.cancel')}</button>
             <button className="btn-primary" onClick={save} disabled={busy || !name.trim()}>{t('common.save')}</button>
@@ -208,6 +305,7 @@ export default function ShareModal({ onClose }: { onClose: () => void }) {
   const [expiry, setExpiry] = useState<Expiry>('never')
   const [lang, setLang] = useState<ShareLang>(LANGS.includes(uiLang) ? uiLang : 'en')
   const [hideEmpty, setHideEmpty] = useState(true)
+  const [opts, setOpts] = useState<ShareOpts>(DEFAULT_OPTS)
   const [showNew, setShowNew] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
 
@@ -222,16 +320,20 @@ export default function ShareModal({ onClose }: { onClose: () => void }) {
   const links = useQuery({
     queryKey: ['share-links'], queryFn: api.getShareLinks, enabled: configured, retry: false,
   })
+  const spools = useShareSpools(configured)
 
   const refreshAll = () => {
     qc.invalidateQueries({ queryKey: ['share-links'] })
     qc.invalidateQueries({ queryKey: ['share-status'] })
   }
   const create = useMutation({
-    mutationFn: () => api.createShareLink({ name: name.trim(), expires_at: expiryToIso(expiry) ?? null, hide_empty: hideEmpty, lang }),
+    mutationFn: () => api.createShareLink({
+      name: name.trim(), expires_at: expiryToIso(expiry) ?? null, hide_empty: hideEmpty, lang, ...optsToInput(opts),
+    }),
     onSuccess: async (link) => {
       refreshAll()
       setShowNew(false)
+      setOpts(DEFAULT_OPTS)
       setName(t('share.defaultName'))
       toast((await copyText(link.url)) ? t('share.createdCopied') : t('share.created'))
     },
@@ -293,7 +395,7 @@ export default function ShareModal({ onClose }: { onClose: () => void }) {
               {list && (
                 list.links.length === 0
                   ? <p className="text-sm text-gray-500">{t('share.noLinks')}</p>
-                  : <ul className="flex flex-col gap-2">{list.links.map(l => <LinkCard key={l.id} link={l} onError={onError} />)}</ul>
+                  : <ul className="flex flex-col gap-2">{list.links.map(l => <LinkCard key={l.id} link={l} spools={spools} onError={onError} />)}</ul>
               )}
 
               {list && (showNew ? (
@@ -301,6 +403,7 @@ export default function ShareModal({ onClose }: { onClose: () => void }) {
                   <div className="font-semibold text-sm">{t('share.newLink')}</div>
                   <LinkFields name={name} setName={setName} expiry={expiry} setExpiry={setExpiry} lang={lang} setLang={setLang} />
                   <Switch on={hideEmpty} label={t('share.hideEmpty')} onChange={setHideEmpty} />
+                  <ShareOptions opts={opts} setOpts={setOpts} spools={spools} />
                   <div className="flex justify-end gap-2">
                     <button className="btn-ghost" onClick={() => setShowNew(false)}>{t('common.cancel')}</button>
                     <button className="btn-primary flex items-center gap-1.5" onClick={() => create.mutate()} disabled={create.isPending || !name.trim()}>

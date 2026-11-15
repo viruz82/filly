@@ -551,6 +551,10 @@ export interface ShareLink {
   expires_at: string | null
   hide_empty: boolean
   lang: ShareLang
+  /** Only these brands / materials are shown; empty = no filter on that field. */
+  brands: string[]
+  materials: string[]
+  show_weight: boolean
   views: number
   last_view_at: string | null
   created_at: string
@@ -565,6 +569,7 @@ export interface ShareLinkList {
 }
 
 export interface SharedSpool {
+  number: number
   brand: string
   material: string
   subtype: string | null
@@ -573,6 +578,8 @@ export interface SharedSpool {
   color_mode: string
   color_effect: string | null
   remaining_pct: number
+  weight_g: number
+  spool_g: number
 }
 
 export interface ShareSnapshot {
@@ -588,4 +595,7 @@ export interface ShareLinkInput {
   hide_empty?: boolean
   active?: boolean
   lang?: ShareLang
+  brands?: string[]
+  materials?: string[]
+  show_weight?: boolean
 }

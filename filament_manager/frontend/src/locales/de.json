@@ -1004,7 +1004,7 @@
     "title": "Sammlung teilen",
     "button": "Teilen",
     "intro": "Ein öffentlicher, nur lesbarer Link zu deiner Spulen-Sammlung. Home Assistant bleibt von außen unerreichbar: Filly schickt nur eine bereinigte Kopie an deinen Share-Worker.",
-    "sharedFields": "Geteilt werden nur Hersteller, Material, Untertyp, Farbname, Farben und Rest in Prozent. Nie: Preise, Lagerorte, Kaufquellen, Notizen, Gewichte, Daten und archivierte Spulen.",
+    "sharedFields": "Geteilt werden nur Spulennummer, Hersteller, Material, Untertyp, Farbname, Farben, Rest in Prozent und Gramm (auf der Seite nur, wenn „Gewicht anzeigen“ an ist). Nie: Preise, Lagerorte, Kaufquellen, Artikelnummern, Notizen, Daten und archivierte Spulen.",
     "preview": "Vorschau der geteilten Daten",
     "col": {
       "color": "Farbe",
@@ -1032,6 +1032,13 @@
       "keep": "Unverändert"
     },
     "hideEmpty": "Leere Spulen ausblenden",
+    "showWeight": "Gewicht anzeigen",
+    "showWeightHint": "Rest und Nennwert in Gramm, zum Beispiel 954 g / 1.000 g. Aus: nur Prozent.",
+    "onlySome": "Nur bestimmte Filamente teilen",
+    "onlySomeHint": "Filtere nach Hersteller oder Material. Alles andere bleibt auf dem Link unsichtbar.",
+    "filterNone": "Nichts ausgewählt: es wird alles geteilt.",
+    "filterCount": "{{count}} von {{total}} Spulen werden geteilt.",
+    "filteredBy": "Nur: {{list}}",
     "pageLang": "Sprache der Seite",
     "create": "Link erstellen",
     "created": "Link erstellt",
