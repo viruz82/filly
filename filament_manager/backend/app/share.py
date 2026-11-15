@@ -4,9 +4,11 @@ Filly never becomes reachable from outside. It sends a cleaned copy of the
 inventory to a small Cloudflare Worker (see share_worker/ in the repository),
 which serves it under unguessable read-only links.
 
-Only the fields in ``build_snapshot`` leave the add-on: brand, material, subtype,
-colour name, colours, colour mode/effect and remaining percent. Prices, storage
-and purchase locations, notes, weights, ids and dates are never sent.
+Only the fields in ``build_snapshot`` leave the add-on: spool number, brand,
+material, subtype, colour name, colours, colour mode/effect, remaining percent and
+the remaining/nominal filament weight in grams (the Worker shows the grams only on
+links that allow it). Prices, storage and purchase locations, notes and dates are
+never sent.
 
 Configuration (add-on options, /data/options.json):
     share_url  https://<worker>.<subdomain>.workers.dev
@@ -113,6 +115,7 @@ def public_spool(spool: Spool) -> dict:
     colors, mode, effect = _look(spool)
     subtype = ", ".join(t for t in (_text(spool.subtype), _text(spool.subtype2)) if t)[:MAX_TEXT]
     return {
+        "number": int(spool.id),
         "brand": _text(spool.brand),
         "material": _text(spool.material),
         "subtype": subtype or None,
@@ -121,6 +124,8 @@ def public_spool(spool: Spool) -> dict:
         "color_mode": mode,
         "color_effect": effect,
         "remaining_pct": int(round(min(100.0, max(0.0, spool.remaining_pct)))),
+        "weight_g": int(round(max(0.0, spool.current_weight_g or 0))),
+        "spool_g": int(round(max(0.0, spool.initial_weight_g or 0))),
     }
 
 

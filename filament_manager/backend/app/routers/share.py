@@ -7,14 +7,14 @@ GET    /api/share/preview             exactly the data that would be shared
 POST   /api/share/push                upload now
 GET    /api/share/links               links with view counters (+ full url)
 POST   /api/share/links               new link
-PATCH  /api/share/links/{id}          name, expiry, active, hide empty, language
+PATCH  /api/share/links/{id}          name, expiry, active, hide empty, language, brand/material filter, weight
 POST   /api/share/links/{id}/renew    new address, old one stops working
 DELETE /api/share/links/{id}
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -55,11 +55,18 @@ def _with_url(cfg: share.ShareConfig, link: dict) -> dict:
     return {**link, "url": f"{cfg.url}/s/{link['id']}"}
 
 
+FilterList = list[Annotated[str, Field(min_length=1, max_length=60)]]
+
+
 class LinkCreate(BaseModel):
     name: str = Field(min_length=1, max_length=60)
     expires_at: Optional[datetime] = None
     hide_empty: bool = True
     lang: Lang = "de"
+    # Only these brands / materials are shown; empty = no filter on that field.
+    brands: FilterList = Field(default_factory=list, max_length=40)
+    materials: FilterList = Field(default_factory=list, max_length=40)
+    show_weight: bool = True
 
 
 class LinkUpdate(BaseModel):
@@ -68,6 +75,9 @@ class LinkUpdate(BaseModel):
     hide_empty: Optional[bool] = None
     active: Optional[bool] = None
     lang: Optional[Lang] = None
+    brands: Optional[FilterList] = Field(default=None, max_length=40)
+    materials: Optional[FilterList] = Field(default=None, max_length=40)
+    show_weight: Optional[bool] = None
 
 
 @router.get("/status")
@@ -127,7 +137,7 @@ async def create_link(payload: LinkCreate):
 async def update_link(link_id: str, payload: LinkUpdate):
     _check_id(link_id)
     data = payload.model_dump(exclude_unset=True)
-    for key in ("name", "hide_empty", "active", "lang"):
+    for key in ("name", "hide_empty", "active", "lang", "brands", "materials", "show_weight"):
         if key in data and data[key] is None:
             raise HTTPException(status_code=422, detail=f"{key} must not be null")
     if "expires_at" in data:

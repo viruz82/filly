@@ -98,9 +98,16 @@ def test_public_spool_has_only_whitelisted_fields(session):
     s = make_spool(session)
     out = share.public_spool(s)
     assert out == {
-        "brand": "SUNLU", "material": "PLA", "subtype": "Matte", "color_name": "Mint Green",
+        "number": s.id, "brand": "SUNLU", "material": "PLA", "subtype": "Matte", "color_name": "Mint Green",
         "colors": ["#00C7B1"], "color_mode": "solid", "color_effect": None, "remaining_pct": 55,
+        "weight_g": 550, "spool_g": 1000,
     }
+
+
+def test_weights_are_whole_grams_and_never_negative(session):
+    out = share.public_spool(make_spool(session, current_weight_g=-12.0, initial_weight_g=1000.4))
+    assert (out["weight_g"], out["spool_g"]) == (0, 1000)
+    assert share.public_spool(make_spool(session, current_weight_g=549.6))["weight_g"] == 550
 
 
 def test_snapshot_never_contains_private_data(session):
@@ -239,6 +246,34 @@ def test_link_lifecycle(client, session, fresh_state, worker):
     assert r.json()["url"] == f"{URL}/s/{LINK_B}"
     assert client.delete(f"/api/share/links/{LINK_B}").status_code == 200
     assert client.delete(f"/api/share/links/{LINK_B}").status_code == 404
+
+
+def test_filter_and_weight_options_reach_the_worker(client, session, fresh_state, worker):
+    configure(fresh_state)
+    make_spool(session)
+    r = client.post("/api/share/links", json={
+        "name": "Gefiltert", "brands": ["SUNLU", "Bambu Lab"], "materials": ["PETG"], "show_weight": False})
+    assert r.status_code == 201
+    sent = worker.calls[0][2] if worker.calls[0][1] == "/api/links" else next(c[2] for c in worker.calls if c[1] == "/api/links")
+    assert sent["brands"] == ["SUNLU", "Bambu Lab"] and sent["materials"] == ["PETG"] and sent["show_weight"] is False
+
+    # defaults: no filter, grams shown
+    client.post("/api/share/links", json={"name": "Alles"})
+    last = [c for c in worker.calls if c[0] == "POST" and c[1] == "/api/links"][-1][2]
+    assert last["brands"] == [] and last["materials"] == [] and last["show_weight"] is True
+
+    r = client.patch(f"/api/share/links/{LINK_A}", json={"brands": [], "show_weight": True})
+    assert r.status_code == 200 and r.json()["brands"] == []
+
+
+def test_filter_input_is_validated(client, fresh_state, worker):
+    configure(fresh_state)
+    assert client.post("/api/share/links", json={"name": "x", "brands": [""]}).status_code == 422
+    assert client.post("/api/share/links", json={"name": "x", "brands": ["a" * 61]}).status_code == 422
+    assert client.post("/api/share/links", json={"name": "x", "materials": [str(i) for i in range(41)]}).status_code == 422
+    assert client.post("/api/share/links", json={"name": "x", "brands": "SUNLU"}).status_code == 422
+    assert client.patch(f"/api/share/links/{LINK_A}", json={"brands": None}).status_code == 422
+    assert worker.calls == []
 
 
 def test_bad_ids_never_reach_the_worker(client, fresh_state, worker):
