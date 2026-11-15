@@ -15,4 +15,6 @@ ingress_port: 8099
 panel_icon: mdi:printer-3d-nozzle
 panel_title: "Filly"
 options: {}
-schema: {}
+schema:
+  share_url: "url?"
+  share_key: "password?"

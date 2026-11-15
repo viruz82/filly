@@ -1,1 +1,7 @@
-configuration: {}
+configuration:
+  share_url:
+    name: Share – Worker address
+    description: "Optional. Address of your Filly share Worker, e.g. https://sammlung.<subdomain>.workers.dev (see share_worker in the repository)."
+  share_key:
+    name: Share – key
+    description: "Optional. The same key as PUSH_KEY in the Worker, at least 32 characters."
