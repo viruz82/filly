@@ -930,6 +930,8 @@
     "running": "En curso",
     "layer": "Capa",
     "remaining": "faltan {{time}}",
+    "finishAt": "termina {{time}}",
+    "finishAtTomorrow": "termina mañana {{time}}",
     "activeSlot": "Ranura {{slot}}",
     "nozzle": "Boquilla",
     "bed": "Cama",

@@ -930,6 +930,8 @@
     "running": "Running",
     "layer": "Layer",
     "remaining": "{{time}} left",
+    "finishAt": "done {{time}}",
+    "finishAtTomorrow": "done tomorrow {{time}}",
     "activeSlot": "Slot {{slot}}",
     "nozzle": "Nozzle",
     "bed": "Bed",

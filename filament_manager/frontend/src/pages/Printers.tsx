@@ -47,7 +47,7 @@ function slotNumber(key: string): string {
 // ── Live card ────────────────────────────────────────────────────────────────
 
 function LiveCard({ printer, status }: { printer: PrinterConfig; status: PrinterStatus | undefined }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { confirm } = useConfirm()
   const qc = useQueryClient()
 
@@ -90,6 +90,15 @@ function LiveCard({ printer, status }: { printer: PrinterConfig; status: Printer
   const layers = status?.layer_num != null && status?.total_layer_num != null
     ? `${t('printers.layer')} ${status.layer_num} / ${status.total_layer_num}` : null
   const remaining = fmtDuration(status?.remaining_time)
+  const remMin = status?.remaining_time != null && status.remaining_time !== '' ? Number(status.remaining_time) : NaN
+  let finishAt: string | null = null
+  if (Number.isFinite(remMin) && remMin >= 0) {
+    const end = new Date(Date.now() + remMin * 60000)
+    const clock = end.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
+    finishAt = end.toDateString() === new Date().toDateString()
+      ? t('printers.finishAt', { time: clock })
+      : t('printers.finishAtTomorrow', { time: clock })
+  }
 
   return (
     <div className="card border border-info/40 bg-info/10">
@@ -101,6 +110,7 @@ function LiveCard({ printer, status }: { printer: PrinterConfig; status: Printer
           <div className="flex flex-wrap gap-1.5 mt-2">
             {layers && <span className="pill">{layers}</span>}
             {remaining && <span className="pill">{t('printers.remaining', { time: remaining })}</span>}
+            {finishAt && <span className="pill">{finishAt}</span>}
             {status?.active_tray && <span className="pill pill-info">{t('printers.activeSlot', { slot: slotNumber(status.active_tray) })}</span>}
             {status?.nozzle_temp && <span className="pill">{t('printers.nozzle')} {fmtNum(Number(status.nozzle_temp), 0)} °C</span>}
             {status?.bed_temp && <span className="pill">{t('printers.bed')} {fmtNum(Number(status.bed_temp), 0)} °C</span>}

@@ -930,6 +930,8 @@
     "running": "Läuft",
     "layer": "Schicht",
     "remaining": "noch {{time}}",
+    "finishAt": "fertig {{time}}",
+    "finishAtTomorrow": "fertig morgen {{time}}",
     "activeSlot": "Fach {{slot}}",
     "nozzle": "Düse",
     "bed": "Bett",

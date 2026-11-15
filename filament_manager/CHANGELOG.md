@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.21.1
+
+- **Printers page: finish time**: the running-print card now shows the expected finish time ("done 14:52", or "done tomorrow 00:35" after midnight) next to the remaining time.
+
 ## 1.21.0
 
 - **Share page redesigned**: stat row (spools, total weight, colours, brands), search field and drop-downs for material and brand, cards with the **spool number** (`#38`, so someone can simply tell you which spool to print with), subtype and effect badges, brand, **grams** (`954 g / 1,000 g`) and the fill bar. The material groups stay. Search and drop-downs use one small inline script; without it the page stays fully readable. The Content-Security-Policy allows exactly that one script (hash) and nothing else; the page still cannot be framed and loads nothing external.
