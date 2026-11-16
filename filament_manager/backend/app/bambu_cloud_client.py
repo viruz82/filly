@@ -626,6 +626,18 @@ def _process_device_message(serial: str, data: dict) -> None:
         )
 
 
+def _tray_is_empty(tray: dict, exist_bits) -> bool:
+    """True when the message says the tray holds no filament."""
+    if tray.get("tray_type") or tray.get("tray_sub_brands") or tray.get("type"):
+        return False                     # carries a profile: not empty, whatever the bit mask says
+    try:
+        if exist_bits not in (None, ""):
+            return not (int(str(exist_bits), 16) >> int(tray.get("id", 0))) & 1
+    except (TypeError, ValueError):
+        pass
+    return set(tray.keys()) <= {"id"}
+
+
 def _parse_ams_into_cache(serial: str, ams_raw: dict) -> None:
     # Merge into the existing cache — do NOT replace wholesale.  Bambu sends
     # incremental MQTT updates that may only carry `remain` without the full
@@ -656,6 +668,15 @@ def _parse_ams_into_cache(serial: str, ams_raw: dict) -> None:
             tray_id = raw_tray_id + 1  # 1-based
             slot_key = f"ams{ams_id}_tray{tray_id}"
             slot = dict(existing.get(slot_key, {}))
+
+            # An empty tray is reported as a tray object that carries only its id (or whose bit in
+            # the unit's tray_exist_bits is 0). Forget the old profile, otherwise the cache keeps the
+            # last material/colour and the dashboard keeps asking which spool sits in an empty slot.
+            if _tray_is_empty(tray, unit.get("tray_exist_bits")):
+                existing[slot_key] = {"empty": True}
+                changed = True
+                continue
+            slot.pop("empty", None)
 
             # remain — always update when the key is present in the message
             if "remain" in tray:

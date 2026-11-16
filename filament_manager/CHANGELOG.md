@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.21.2
+
+- **Empty AMS slot no longer asks for a spool**: when a tray was emptied, the cache kept the last material and colour, so the Printers page and the dashboard card kept asking "Which spool is in AMS 1 · T4?". An empty tray (a tray message that carries only its id, or a cleared bit in `tray_exist_bits`) now drops its old profile and shows as empty. A message with a profile always wins over the bit mask.
+- Tests: 5 new backend tests (554 in total).
+
 ## 1.21.1
 
 - **Printers page: finish time**: the running-print card now shows the expected finish time ("done 14:52", or "done tomorrow 00:35" after midnight) next to the remaining time.
