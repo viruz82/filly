@@ -45,6 +45,8 @@ export function SpoolForm({
   const [form, setForm] = useState({
     ...EMPTY_FORM,
     ...initial,
+    // New and duplicated spools get their number from the backend (empty = automatic).
+    custom_id: (isNew ? '' : initial?.custom_id ?? '') as string | number,
     subtype: initial?.subtype ?? '',
     subtype2: initial?.subtype2 ?? '',
     purchase_price: initial?.purchase_price?.toString() ?? '',
@@ -65,6 +67,9 @@ export function SpoolForm({
   })
 
   const toast = useToast()
+  const [editNumber, setEditNumber] = useState(false)   // number field unlocked by "change"
+  const { data: numbers } = useQuery({ queryKey: ['spools', 'next-number'], queryFn: api.getNextSpoolNumber })
+  const freeNumbers = numbers?.free ?? []
   const [showLibrary, setShowLibrary] = useState(false)
   const [measuredTotal, setMeasuredTotal] = useState('')
   const [quantity, setQuantity] = useState(1)
@@ -250,19 +255,67 @@ export function SpoolForm({
               </div>
               <div>
                 <label className="label">{t('spools.form.customId')}</label>
-                <input
-                  className="input"
-                  type="number"
-                  min="1"
-                  max="9999"
-                  step="1"
-                  placeholder="—"
-                  value={form.custom_id ?? ''}
-                  onChange={e => {
-                    const v = e.target.value.replace(/\D/g, '').slice(0, 4)
-                    setForm(f => ({ ...f, custom_id: v }))
-                  }}
-                />
+                {!editNumber ? (
+                  <div className="input flex items-center justify-between gap-2">
+                    <span>
+                      {isNew
+                        ? <>{numbers?.next != null ? `#${numbers.next}` : '—'} <span className="text-gray-500 text-xs">({t('spools.form.customIdAuto')})</span></>
+                        : (form.custom_id !== '' ? `#${form.custom_id}` : '—')}
+                    </span>
+                    <button
+                      type="button"
+                      className="text-xs text-accent hover:underline"
+                      onClick={() => {
+                        setEditNumber(true)
+                        if (isNew && numbers?.next != null) setForm(f => ({ ...f, custom_id: String(numbers.next) }))
+                      }}
+                    >
+                      {t('spools.form.customIdChange')}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      className="input"
+                      type="number"
+                      min="1"
+                      max="9999"
+                      step="1"
+                      placeholder="—"
+                      autoFocus
+                      value={form.custom_id ?? ''}
+                      onChange={e => {
+                        const v = e.target.value.replace(/\D/g, '').slice(0, 4)
+                        setForm(f => ({ ...f, custom_id: v }))
+                      }}
+                    />
+                    {isNew && (
+                      <button
+                        type="button"
+                        className="text-xs text-accent hover:underline mt-1"
+                        onClick={() => { setEditNumber(false); setForm(f => ({ ...f, custom_id: '' })) }}
+                      >
+                        {t('spools.form.customIdAutoReset')}
+                      </button>
+                    )}
+                    {freeNumbers.length > 0 && (
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        {t('spools.form.customIdFree', { list: '' })}
+                        {freeNumbers.slice(0, 12).map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            className="text-accent hover:underline mr-1.5"
+                            onClick={() => setForm(f => ({ ...f, custom_id: String(n) }))}
+                          >
+                            #{n}
+                          </button>
+                        ))}
+                        {freeNumbers.length > 12 && '…'}
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </Section>

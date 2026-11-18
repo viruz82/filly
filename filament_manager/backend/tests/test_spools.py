@@ -410,3 +410,60 @@ class TestAmsSlotUnique:
         a = client.post("/api/spools", json=make_spool_payload(ams_slot="A1:ams1_tray1")).json()
         r = client.patch(f"/api/spools/{a['id']}", json={"ams_slot": ""})
         assert r.json()["ams_slot"] is None
+
+
+# ---------------------------------------------------------------------------
+# Automatic spool numbers (1.22.2)
+# ---------------------------------------------------------------------------
+
+class TestSpoolNumbers:
+    def test_new_spools_count_up_from_one(self, client):
+        a = client.post("/api/spools", json=make_spool_payload()).json()
+        b = client.post("/api/spools", json=make_spool_payload()).json()
+        assert (a["custom_id"], b["custom_id"]) == (1, 2)
+
+    def test_next_is_highest_plus_one_and_gaps_are_not_filled(self, client):
+        client.post("/api/spools", json=make_spool_payload(custom_id=5))
+        c = client.post("/api/spools", json=make_spool_payload()).json()
+        assert c["custom_id"] == 6
+        r = client.get("/api/spools/next-number").json()
+        assert r["next"] == 7
+        assert r["free"] == [1, 2, 3, 4]
+
+    def test_archived_number_stays_taken(self, client):
+        a = client.post("/api/spools", json=make_spool_payload()).json()
+        client.post(f"/api/spools/{a['id']}/archive")
+        b = client.post("/api/spools", json=make_spool_payload()).json()
+        assert b["custom_id"] == 2
+
+    def test_duplicate_number_among_active_spools_rejected(self, client):
+        client.post("/api/spools", json=make_spool_payload(custom_id=3))
+        r = client.post("/api/spools", json=make_spool_payload(custom_id=3))
+        assert r.status_code == 409
+
+    def test_manual_number_may_reuse_an_archived_one(self, client):
+        a = client.post("/api/spools", json=make_spool_payload(custom_id=3)).json()
+        client.post(f"/api/spools/{a['id']}/archive")
+        r = client.post("/api/spools", json=make_spool_payload(custom_id=3))
+        assert r.status_code == 201
+        assert r.json()["custom_id"] == 3
+
+    def test_update_to_used_number_rejected_own_number_ok(self, client):
+        a = client.post("/api/spools", json=make_spool_payload()).json()
+        b = client.post("/api/spools", json=make_spool_payload()).json()
+        assert client.patch(f"/api/spools/{b['id']}", json={"custom_id": a["custom_id"]}).status_code == 409
+        assert client.patch(f"/api/spools/{b['id']}", json={"custom_id": b["custom_id"], "notes": "x"}).status_code == 200
+
+    def test_unarchive_with_taken_number_gets_a_new_one(self, client):
+        a = client.post("/api/spools", json=make_spool_payload(custom_id=3)).json()
+        client.post(f"/api/spools/{a['id']}/archive")
+        client.post("/api/spools", json=make_spool_payload(custom_id=3))   # manual reuse
+        r = client.post(f"/api/spools/{a['id']}/unarchive").json()
+        assert r["custom_id"] == 4
+        assert r["archived"] is False
+
+    def test_unarchive_keeps_number_when_free(self, client):
+        a = client.post("/api/spools", json=make_spool_payload()).json()
+        client.post(f"/api/spools/{a['id']}/archive")
+        r = client.post(f"/api/spools/{a['id']}/unarchive").json()
+        assert r["custom_id"] == a["custom_id"]

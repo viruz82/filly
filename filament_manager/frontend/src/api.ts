@@ -36,6 +36,8 @@ export const api = {
     request<import('./types').SpoolAuditEntry[]>(`spools/${id}/audit`),
   correctSpoolAudit: (spoolId: number, entryId: number) =>
     request<import('./types').SpoolAuditEntry>(`spools/${spoolId}/audit/${entryId}/correct`, { method: 'POST' }),
+  /** Number the next new spool gets plus unused numbers below the highest one. */
+  getNextSpoolNumber: () => request<{ next: number | null; free: number[] }>('spools/next-number'),
   getMaterials: () => request<string[]>('spools/materials/list'),
   getSubtypes: () => request<string[]>('spools/subtypes/list'),
 

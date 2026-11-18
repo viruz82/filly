@@ -40,6 +40,40 @@ def _claim_ams_slot(slot: str | None, spool_id: int | None, db: Session) -> str 
     return slot
 
 
+MAX_CUSTOM_ID = 9999
+
+
+def _used_numbers(db: Session) -> set[int]:
+    """Spool numbers in use. Archived spools count: a number belongs to one spool for good."""
+    return {n for (n,) in db.query(Spool.custom_id).filter(Spool.custom_id.isnot(None)).all()}
+
+
+def _next_custom_id(db: Session) -> int | None:
+    """Highest number in use + 1; once 9999 is reached the lowest free number. None if all are taken."""
+    used = _used_numbers(db)
+    nxt = max(used, default=0) + 1
+    if nxt <= MAX_CUSTOM_ID:
+        return nxt
+    return next((n for n in range(1, MAX_CUSTOM_ID + 1) if n not in used), None)
+
+
+def _free_numbers_below_max(db: Session) -> list[int]:
+    used = _used_numbers(db)
+    return [n for n in range(1, max(used, default=0)) if n not in used]
+
+
+def _check_number_free(db: Session, number: int | None, spool_id: int | None) -> None:
+    """A number may only exist once among the active (not archived) spools."""
+    if number is None:
+        return
+    q = db.query(Spool).filter(Spool.custom_id == number, Spool.archived == False)  # noqa: E712
+    if spool_id is not None:
+        q = q.filter(Spool.id != spool_id)
+    other = q.first()
+    if other:
+        raise HTTPException(409, f"Spool number #{number} is already used by another spool")
+
+
 router = APIRouter(prefix="/api/spools", tags=["spools"])
 
 
@@ -60,6 +94,11 @@ def list_spools(
 @router.post("", response_model=SpoolOut, status_code=201)
 def create_spool(body: SpoolCreate, db: Session = Depends(get_db)):
     data = body.model_dump()
+    # No number given → the next free one; a given number must not be used by an active spool.
+    if data.get("custom_id") is None:
+        data["custom_id"] = _next_custom_id(db)
+    else:
+        _check_number_free(db, data["custom_id"], None)
     # An explicit per-spool tare wins; otherwise take it from the brand config.
     if not data.get("spool_weight_g"):
         data["spool_weight_g"] = _resolve_spool_weight(data.get("brand"), db)
@@ -92,6 +131,12 @@ def mark_label_printed(body: LabelPrintedIn, db: Session = Depends(get_db)):
     return {"updated": n, "label_printed_at": when}
 
 
+@router.get("/next-number")
+def next_number(db: Session = Depends(get_db)):
+    """Number the next new spool gets, plus unused numbers below the highest one (gaps)."""
+    return {"next": _next_custom_id(db), "free": _free_numbers_below_max(db)}
+
+
 @router.get("/{spool_id}", response_model=SpoolOut)
 def get_spool(spool_id: int, db: Session = Depends(get_db)):
     spool = db.get(Spool, spool_id)
@@ -106,6 +151,8 @@ def update_spool(spool_id: int, body: SpoolUpdate, background_tasks: BackgroundT
     if not spool:
         raise HTTPException(404, "Spool not found")
     updates = body.model_dump(exclude_unset=True)
+    if updates.get("custom_id") is not None and updates["custom_id"] != spool.custom_id:
+        _check_number_free(db, updates["custom_id"], spool.id)
     # Tare rules:
     # - an explicit spool_weight_g in the PATCH is applied as the spool's own
     #   tare (None → take it from the brand config again);
@@ -343,6 +390,13 @@ def unarchive_spool(spool_id: int, db: Session = Depends(get_db)):
     if not spool:
         raise HTTPException(404, "Spool not found")
     spool.archived = False
+    # Its number may have been given to a new spool meanwhile → take the next free one.
+    if spool.custom_id is not None:
+        taken = db.query(Spool).filter(
+            Spool.custom_id == spool.custom_id, Spool.archived == False, Spool.id != spool.id  # noqa: E712
+        ).first()
+        if taken:
+            spool.custom_id = _next_custom_id(db)
     spool.updated_at = utcnow()
     db.commit()
     db.refresh(spool)

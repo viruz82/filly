@@ -144,6 +144,7 @@ export default function Spools() {
   const updateMut = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Spool> }) => api.updateSpool(id, data),
     onSuccess: () => { invalidate(); qc.invalidateQueries({ queryKey: ['printer-ams'] }); setEditing(null) },
+    onError: (err) => toast.error(numberError(err)),
   })
   const deleteMut = useMutation({ mutationFn: api.deleteSpool, onSuccess: invalidate })
   // Direct AMS slot assignment — the backend frees the slot on whichever spool held it before.
@@ -185,13 +186,27 @@ export default function Spools() {
     if (editing) {
       updateMut.mutate({ id: editing.id, data: payload })
     } else {
-      for (let i = 0; i < quantity; i++) {
-        await api.createSpool(payload)
+      try {
+        for (let i = 0; i < quantity; i++) {
+          // a hand-typed number belongs to the first spool only, the others count on automatically
+          await api.createSpool(i === 0 ? payload : { ...payload, custom_id: null })
+        }
+      } catch (err) {
+        invalidate()
+        toast.error(numberError(err))
+        return
       }
       invalidate()
       setShowForm(false)
       setDuplicating(null)
     }
+  }
+
+  /** Readable message for a failed save; a taken spool number (HTTP 409) gets its own text. */
+  const numberError = (err: unknown): string => {
+    const msg = err instanceof Error ? err.message : 'Saving failed'
+    const m = /^409:.*#(\d+)/.exec(msg)
+    return m ? t('spools.form.customIdTaken', { n: m[1] }) : msg
   }
 
   const spoolLabel = (s: Spool) => `${s.brand} ${s.material}${s.color_name ? ` · ${s.color_name}` : ''}`
@@ -204,8 +219,10 @@ export default function Spools() {
     }),
   })
   const unarchiveSpool = (s: Spool) => unarchiveMut.mutate(s.id, {
-    onSuccess: () => toast({
-      message: t('spools.unarchivedToast', { name: spoolLabel(s) }),
+    onSuccess: (back) => toast({
+      message: back.custom_id !== s.custom_id && back.custom_id != null
+        ? t('spools.renumberedToast', { name: spoolLabel(s), n: back.custom_id })
+        : t('spools.unarchivedToast', { name: spoolLabel(s) }),
       actionLabel: t('common.undo'),
       onAction: () => archiveMut.mutate(s.id),
     }),

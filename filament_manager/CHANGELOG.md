@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.22.2
+
+- **Spool numbers are assigned automatically**: a new spool gets the highest number in use plus one (archived spools count, so a number always belongs to one spool; gaps are not refilled). The field is renamed from "# (Reference)" to **Spool number** and shows the number with a **change** link; only after clicking it can the number be typed. When changing a number, the free numbers below the highest one are listed and can be clicked. With quantity above 1 every spool gets its own number, and duplicating a spool no longer copies the number.
+- **A number can only exist once among active spools**: the backend rejects a number already used by another active spool (HTTP 409, clear message in the form). When an archived spool is restored and its number was taken meanwhile, it gets the next free number and a message tells you. New endpoint `GET /api/spools/next-number`.
+
 ## 1.22.1
 
 - **Colour filter sorts browns, greys and a few more colours correctly**: the colour family is derived from the hex colour, and the old limits put many browns under orange or red (Brown, Light Brown, Oak, Wood, Beige, Chocolate), Mint Green under blue, a bluish Light Grey under blue and Very Peri under blue. Now: muted warm tones (hue 8 to 50 degrees, saturation under 60 %) are **Brown / beige**, bluish slate greys are grey, Mint and Turquoise are green, blue-violets from 242 degrees are violet, cream and ivory are white, gold and mustard are yellow, dark olive is green, lilac is violet. The family is still only a guess from the hex value.
