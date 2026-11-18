@@ -139,6 +139,8 @@
     "archivedToast": "“{{name}}” archived",
     "unarchivedToast": "“{{name}}” restored",
     "renumberedToast": "“{{name}}” restored – its old number was already taken, new number: #{{n}}",
+    "leftAmsToast": "“{{name}}” is now stored as: {{packaging}}.",
+    "leftAmsChange": "Change",
     "filter": { "all": "Active", "moist": "Moist", "low": "Low", "full": "Full", "ams": "In AMS", "archived": "Archived" },
     "filterLocation": "All locations",
     "filterBrand": "All brands",
@@ -213,7 +215,7 @@
       "colorPlaceholder": "Fire Red, Black, …",
       "tareOwn": "Own value for this spool (empty = brand value)",
       "packaging": "Packaging",
-      "packagingHint": "Where the spool is kept when it is not in the AMS. While it sits in the AMS, \"In AMS\" applies automatically. A spool stored as \"Original packaging\" is set to \"Open on shelf\" automatically when it is loaded into the AMS.",
+      "packagingHint": "Where the spool is kept when it is not in the AMS. While it sits in the AMS, \"In AMS\" applies automatically. A spool stored as \"Original packaging\" is set to \"Open on shelf\" automatically when it is loaded into the AMS. When taken out it goes back to \"Vacuum sealed\".",
       "justDried": "Just dried"
     },
     "table": {

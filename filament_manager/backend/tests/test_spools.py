@@ -467,3 +467,36 @@ class TestSpoolNumbers:
         client.post(f"/api/spools/{a['id']}/archive")
         r = client.post(f"/api/spools/{a['id']}/unarchive").json()
         assert r["custom_id"] == a["custom_id"]
+
+
+# ---------------------------------------------------------------------------
+# Default packaging (1.23.0)
+# ---------------------------------------------------------------------------
+
+class TestDefaultPackaging:
+    def test_new_spool_is_vacuum_packed_by_default(self, client):
+        r = client.post("/api/spools", json=make_spool_payload()).json()
+        assert r["packaging"] == "vacuum"
+
+    def test_explicit_packaging_is_kept_on_create(self, client):
+        r = client.post("/api/spools", json=make_spool_payload(packaging="drybox")).json()
+        assert r["packaging"] == "drybox"
+
+    def test_leaving_ams_resets_open_to_vacuum(self, client):
+        a = client.post("/api/spools", json=make_spool_payload(packaging="original")).json()
+        r = client.patch(f"/api/spools/{a['id']}", json={"ams_slot": "P:ams1_tray1"}).json()
+        assert r["packaging"] == "open"                   # loading opens an original-packed spool
+        r = client.patch(f"/api/spools/{a['id']}", json={"ams_slot": None}).json()
+        assert r["packaging"] == "vacuum"
+
+    def test_leaving_ams_keeps_a_deliberate_choice(self, client):
+        a = client.post("/api/spools", json=make_spool_payload(packaging="drybox")).json()
+        client.patch(f"/api/spools/{a['id']}", json={"ams_slot": "P:ams1_tray1"})
+        r = client.patch(f"/api/spools/{a['id']}", json={"ams_slot": None}).json()
+        assert r["packaging"] == "drybox"
+
+    def test_explicit_packaging_in_the_same_save_wins(self, client):
+        a = client.post("/api/spools", json=make_spool_payload(packaging="original")).json()
+        client.patch(f"/api/spools/{a['id']}", json={"ams_slot": "P:ams1_tray1"})
+        r = client.patch(f"/api/spools/{a['id']}", json={"ams_slot": None, "packaging": "open"}).json()
+        assert r["packaging"] == "open"

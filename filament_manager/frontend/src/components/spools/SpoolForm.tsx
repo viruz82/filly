@@ -55,7 +55,8 @@ export function SpoolForm({
     storage_location: initial?.storage_location ?? '',
     article_number: initial?.article_number ?? '',
     last_dried_at: initial?.last_dried_at ? initial.last_dried_at.slice(0, 10) : '',
-    packaging: (initial?.packaging ?? '') as Packaging | '',
+    // new (and duplicated = newly bought) spools come vacuum-packed
+    packaging: (isNew ? 'vacuum' : initial?.packaging ?? '') as Packaging | '',
     initial_weight_g: initial?.initial_weight_g ?? 1000,
     current_weight_g: initial?.current_weight_g ?? 1000,
     spool_weight_g: initial?.spool_weight_g ? String(initial.spool_weight_g) : '',

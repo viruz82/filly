@@ -108,7 +108,7 @@ def test_spool_out_has_moisture(client):
 
 def test_spool_without_dry_date_is_unknown(client):
     s = _spool(client)
-    assert s["moisture"] == {"pct": None, "level": "unknown", "storage": "unknown", "days_since_dried": None}
+    assert s["moisture"] == {"pct": None, "level": "unknown", "storage": "vacuum", "days_since_dried": None}
 
 
 def test_invalid_packaging_rejected(client):

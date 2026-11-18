@@ -139,6 +139,8 @@
     "archivedToast": "„{{name}}“ archiviert",
     "unarchivedToast": "„{{name}}“ wiederhergestellt",
     "renumberedToast": "„{{name}}“ wiederhergestellt – die alte Nummer war schon vergeben, neue Nummer: #{{n}}",
+    "leftAmsToast": "„{{name}}“ liegt jetzt: {{packaging}}.",
+    "leftAmsChange": "Ändern",
     "filter": { "all": "Aktiv", "moist": "Feucht", "low": "Wenig", "full": "Voll", "ams": "Im AMS", "archived": "Archiviert" },
     "filterLocation": "Alle Lagerorte",
     "filterBrand": "Alle Hersteller",
@@ -213,7 +215,7 @@
       "colorPlaceholder": "Feuerrot, Schwarz, …",
       "tareOwn": "Eigener Wert dieser Spule (leer = Wert der Marke)",
       "packaging": "Verpackung",
-      "packagingHint": "Wo die Spule liegt, wenn sie nicht im AMS steckt. Solange sie im AMS steckt, zählt automatisch „Im AMS“. Eine „Originalverpackt“-Spule wird beim Einlegen ins AMS automatisch auf „Offen im Regal“ gesetzt.",
+      "packagingHint": "Wo die Spule liegt, wenn sie nicht im AMS steckt. Solange sie im AMS steckt, zählt automatisch „Im AMS“. Eine „Originalverpackt“-Spule wird beim Einlegen ins AMS automatisch auf „Offen im Regal“ gesetzt. Beim Herausnehmen wird sie wieder auf „Vakuumverpackt“ gesetzt.",
       "justDried": "Gerade getrocknet"
     },
     "table": {

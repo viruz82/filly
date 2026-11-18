@@ -150,7 +150,20 @@ export default function Spools() {
   // Direct AMS slot assignment — the backend frees the slot on whichever spool held it before.
   const assignSlotMut = useMutation({
     mutationFn: ({ id, slot }: { id: number; slot: string | null }) => api.updateSpool(id, { ams_slot: slot }),
-    onSuccess: () => { invalidate(); qc.invalidateQueries({ queryKey: ['printer-ams'] }) },
+    onSuccess: (saved, vars) => {
+      invalidate(); qc.invalidateQueries({ queryKey: ['printer-ams'] })
+      // taken out of the AMS: say how it is stored now (vacuum by default) and offer to change it
+      if (vars.slot === null && saved.packaging) {
+        toast({
+          message: t('spools.leftAmsToast', {
+            name: `${saved.brand} ${saved.material}${saved.color_name ? ` · ${saved.color_name}` : ''}`,
+            packaging: t(`moisture.storage.${saved.packaging}`),
+          }),
+          actionLabel: t('spools.leftAmsChange'),
+          onAction: () => setEditing(saved),
+        })
+      }
+    },
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Saving failed'),
   })
   const archiveMut = useMutation({ mutationFn: (id: number) => api.archiveSpool(id), onSuccess: invalidate })

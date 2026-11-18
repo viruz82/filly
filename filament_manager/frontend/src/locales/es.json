@@ -139,6 +139,8 @@
     "archivedToast": "«{{name}}» archivada",
     "unarchivedToast": "«{{name}}» restaurada",
     "renumberedToast": "«{{name}}» restaurada – su número anterior ya estaba ocupado, nuevo número: n.º {{n}}",
+    "leftAmsToast": "«{{name}}» ahora se guarda como: {{packaging}}.",
+    "leftAmsChange": "Cambiar",
     "filter": { "all": "Activas", "moist": "Húmedas", "low": "Pocas", "full": "Llenas", "ams": "En AMS", "archived": "Archivadas" },
     "filterLocation": "Todas las ubicaciones",
     "filterBrand": "Todas las marcas",
@@ -213,7 +215,7 @@
       "colorPlaceholder": "Rojo fuego, Negro, …",
       "tareOwn": "Valor propio de esta bobina (vacío = valor de la marca)",
       "packaging": "Embalaje",
-      "packagingHint": "Dónde se guarda la bobina cuando no está en el AMS. Mientras está en el AMS se aplica automáticamente «En el AMS». Una bobina «En envase original» pasa a «Abierta en la estantería» al cargarla en el AMS.",
+      "packagingHint": "Dónde se guarda la bobina cuando no está en el AMS. Mientras está en el AMS se aplica automáticamente «En el AMS». Una bobina «En envase original» pasa a «Abierta en la estantería» al cargarla en el AMS. Al sacarla vuelve a «Al vacío».",
       "justDried": "Recién secada"
     },
     "table": {

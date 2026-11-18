@@ -177,18 +177,27 @@ def anchor(spool, now: datetime | None = None) -> None:
     spool.moisture_anchor_at = now
 
 
-def set_ams_slot(spool, slot: str | None, now: datetime | None = None) -> None:
+DEFAULT_PACKAGING = "vacuum"
+
+
+def set_ams_slot(spool, slot: str | None, now: datetime | None = None,
+                 leave_packaging: str | None = DEFAULT_PACKAGING) -> None:
     """Change the AMS slot, keeping the dryness value continuous.
 
     Loading an originally sealed spool opens it, so its packaging becomes "open".
+    A spool taken out of the AMS is stored vacuum-packed again (``leave_packaging``,
+    only replaces "unknown", "open" and "original"; pass None to keep the value).
     """
     if (spool.ams_slot or None) == (slot or None):
         spool.ams_slot = slot
         return
+    left_ams = bool(spool.ams_slot) and not slot
     if bool(spool.ams_slot) != bool(slot):
         anchor(spool, now)
     if slot and spool.packaging == "original":
         spool.packaging = "open"
+    if left_ams and leave_packaging and spool.packaging in (None, "", "open", "original"):
+        spool.packaging = leave_packaging
     spool.ams_slot = slot
 
 

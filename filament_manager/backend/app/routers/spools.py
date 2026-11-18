@@ -104,6 +104,8 @@ def create_spool(body: SpoolCreate, db: Session = Depends(get_db)):
         data["spool_weight_g"] = _resolve_spool_weight(data.get("brand"), db)
     if "ams_slot" in data:
         data["ams_slot"] = _claim_ams_slot(data["ams_slot"], None, db)
+    if not data.get("packaging"):
+        data["packaging"] = moisture.DEFAULT_PACKAGING     # new spools come vacuum-packed
     if data.get("ams_slot") and data.get("packaging") == "original":
         data["packaging"] = "open"      # loaded into the AMS → no longer sealed
     spool = Spool(**data)
@@ -171,10 +173,13 @@ def update_spool(spool_id: int, body: SpoolUpdate, background_tasks: BackgroundT
                 if k in updates}
     # Storage changes keep the reached dryness value (only the rate changes);
     # material is applied first only when the storage does not change with it.
-    if "packaging" in updates:
+    packaging_given = "packaging" in updates
+    if packaging_given:
         moisture.set_packaging(spool, updates.pop("packaging"))
     if "ams_slot" in updates:
-        moisture.set_ams_slot(spool, updates.pop("ams_slot"))
+        # an explicit packaging in the same save wins over the "back to vacuum" default
+        moisture.set_ams_slot(spool, updates.pop("ams_slot"),
+                              leave_packaging=None if packaging_given else moisture.DEFAULT_PACKAGING)
     if "last_dried_at" in updates:
         new_dried = updates["last_dried_at"]
         old_dried = spool.last_dried_at
