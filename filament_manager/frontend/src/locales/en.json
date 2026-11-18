@@ -145,7 +145,7 @@
     "filterSubtype": "All sub-types",
     "filterSubtypeLabel": "Sub-type",
     "filterColor": "Color",
-    "colorFamily": { "black": "Black", "white": "White", "grey": "Grey", "red": "Red", "orange": "Orange", "yellow": "Yellow", "green": "Green", "blue": "Blue", "violet": "Violet", "pink": "Pink", "brown": "Brown", "multi": "Multicolor" },
+    "colorFamily": { "black": "Black", "white": "White", "grey": "Grey", "red": "Red", "orange": "Orange", "yellow": "Yellow", "green": "Green", "blue": "Blue", "violet": "Violet", "pink": "Pink", "brown": "Brown / beige", "multi": "Multicolor" },
     "sort": { "label": "Sort", "ams": "AMS first", "number": "Number", "name": "Name", "material": "Material", "rest": "Remaining (lowest first)", "weight": "Weight" },
     "viewList": "List view",
     "viewGridShort": "Tiles",

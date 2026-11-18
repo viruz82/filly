@@ -145,7 +145,7 @@
     "filterSubtype": "Alle Untertypen",
     "filterSubtypeLabel": "Untertyp",
     "filterColor": "Farbe",
-    "colorFamily": { "black": "Schwarz", "white": "Weiß", "grey": "Grau", "red": "Rot", "orange": "Orange", "yellow": "Gelb", "green": "Grün", "blue": "Blau", "violet": "Violett", "pink": "Rosa", "brown": "Braun", "multi": "Mehrfarbig" },
+    "colorFamily": { "black": "Schwarz", "white": "Weiß", "grey": "Grau", "red": "Rot", "orange": "Orange", "yellow": "Gelb", "green": "Grün", "blue": "Blau", "violet": "Violett", "pink": "Rosa", "brown": "Braun / Beige", "multi": "Mehrfarbig" },
     "sort": { "label": "Sortierung", "ams": "AMS zuerst", "number": "Nummer", "name": "Name", "material": "Material", "rest": "Rest (wenig zuerst)", "weight": "Gewicht" },
     "viewList": "Listenansicht",
     "viewGridShort": "Kacheln",

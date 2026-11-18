@@ -145,7 +145,7 @@
     "filterSubtype": "Todos los subtipos",
     "filterSubtypeLabel": "Subtipo",
     "filterColor": "Color",
-    "colorFamily": { "black": "Negro", "white": "Blanco", "grey": "Gris", "red": "Rojo", "orange": "Naranja", "yellow": "Amarillo", "green": "Verde", "blue": "Azul", "violet": "Violeta", "pink": "Rosa", "brown": "Marrón", "multi": "Multicolor" },
+    "colorFamily": { "black": "Negro", "white": "Blanco", "grey": "Gris", "red": "Rojo", "orange": "Naranja", "yellow": "Amarillo", "green": "Verde", "blue": "Azul", "violet": "Violeta", "pink": "Rosa", "brown": "Marrón / beige", "multi": "Multicolor" },
     "sort": { "label": "Orden", "ams": "AMS primero", "number": "Número", "name": "Nombre", "material": "Material", "rest": "Restante (menos primero)", "weight": "Peso" },
     "viewList": "Vista de lista",
     "viewGridShort": "Mosaico",

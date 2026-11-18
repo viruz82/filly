@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.22.1
+
+- **Colour filter sorts browns, greys and a few more colours correctly**: the colour family is derived from the hex colour, and the old limits put many browns under orange or red (Brown, Light Brown, Oak, Wood, Beige, Chocolate), Mint Green under blue, a bluish Light Grey under blue and Very Peri under blue. Now: muted warm tones (hue 8 to 50 degrees, saturation under 60 %) are **Brown / beige**, bluish slate greys are grey, Mint and Turquoise are green, blue-violets from 242 degrees are violet, cream and ivory are white, gold and mustard are yellow, dark olive is green, lilac is violet. The family is still only a guess from the hex value.
+
 ## 1.22.0
 
 - **More filters on the Spools page**: new dropdowns for **brand** and **sub-type** (the sub-type list only offers the types of the chosen material), a **Full** quick filter (95 % or more left) and a **Color** filter with colour dots (black, white, grey, red, orange, yellow, green, blue, violet, pink, brown, multicolor). The family is derived from the spool's hex colour; spools with more than one colour count as multicolor. Only families that exist in your stock are offered. "Clear filters" resets all of them. Deep link: `#/spools?filter=full`.

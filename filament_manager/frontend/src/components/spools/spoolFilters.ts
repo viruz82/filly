@@ -62,12 +62,20 @@ export function colorFamily(s: Spool): ColorFamily | null {
     h *= 60
     if (h < 0) h += 360
   }
+  // Brown / beige / sand / wood are muted oranges: warm hue, low saturation, any lightness.
+  if (h >= 8 && h < 50 && sat < 0.6) return 'brown'
+  // Bluish slate greys (e.g. "Light Grey" #536C8B) have a little saturation but are grey.
+  if (h >= 180 && h < 260 && sat < 0.27 && l > 0.3 && l < 0.8) return 'grey'
   if (h >= 345 || h < 15) return l > 0.75 ? 'pink' : 'red'
-  if (h < 45) return l < 0.38 ? 'brown' : 'orange'
-  if (h < 70) return l < 0.35 ? 'brown' : 'yellow'
-  if (h < 165) return 'green'
-  if (h < 260) return 'blue'
-  if (h < 300) return 'violet'
+  if (h < 40) return l < 0.38 ? 'brown' : 'orange'
+  if (h < 70) {
+    if (l > 0.85) return 'white'                    // cream / ivory
+    if (l < 0.35) return h >= 60 ? 'green' : 'brown' // dark olive is green
+    return 'yellow'                                  // gold and mustard included
+  }
+  if (h < 175) return 'green'
+  if (h < 242) return 'blue'
+  if (h < 310) return 'violet'
   return 'pink'
 }
 
