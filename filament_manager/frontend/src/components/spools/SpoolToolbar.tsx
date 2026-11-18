@@ -1,18 +1,19 @@
 // One bar for both spool views: search, filter chips, material / location filters,
 // view switch, sort (tiles + phone), add button and the "⋯" menu (inventory, labels).
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search, X, LayoutGrid, List, Plus, Ellipsis, FileDown, QrCode, Loader2, ArrowDownUp, Share2 } from 'lucide-react'
+import { Search, X, LayoutGrid, List, Plus, Ellipsis, FileDown, QrCode, Loader2, ArrowDownUp, Share2, ChevronDown } from 'lucide-react'
 import Menu from '../ui/Menu'
 import { fmtNum } from '../../utils/number'
-import type { QuickFilter, SortKey, SortState, SpoolFilter } from './spoolFilters'
-import { QUICK_FILTERS, SORT_KEYS, defaultDir } from './spoolFilters'
+import type { ColorFamily, QuickFilter, SortKey, SortState, SpoolFilter } from './spoolFilters'
+import { COLOR_FAMILIES, EMPTY_FILTER, QUICK_FILTERS, SORT_KEYS, defaultDir } from './spoolFilters'
 
 export type SpoolView = 'cards' | 'table'
 
-export interface Counts { all: number; moist: number; low: number; ams: number }
+export interface Counts { all: number; moist: number; low: number; full: number; ams: number }
 
 export default function SpoolToolbar({
-  filter, onFilter, counts, materials, locations, view, onView, sort, onSort,
+  filter, onFilter, counts, materials, locations, brands, subtypes, colorFamilies, view, onView, sort, onSort,
   onAdd, onInventory, inventoryBusy, onLabels, onShare, total, kg, value, fmtCurrency,
 }: {
   filter: SpoolFilter
@@ -20,6 +21,9 @@ export default function SpoolToolbar({
   counts: Counts
   materials: string[]
   locations: string[]
+  brands: string[]
+  subtypes: string[]
+  colorFamilies: ColorFamily[]
   view: SpoolView
   onView: (v: SpoolView) => void
   sort: SortState
@@ -36,6 +40,11 @@ export default function SpoolToolbar({
 }) {
   const { t } = useTranslation()
   const set = (patch: Partial<SpoolFilter>) => onFilter({ ...filter, ...patch })
+  const [colorsOpen, setColorsOpen] = useState(false)
+  const swatch = (key: ColorFamily) => COLOR_FAMILIES.find(c => c.key === key)?.hex ?? '#888'
+  const swatchStyle = (key: ColorFamily) => ({ background: swatch(key) })
+  const hasFilter = !!(filter.q || filter.material || filter.location || filter.brand || filter.subtype
+    || filter.colorFamily || filter.quick !== 'all')
 
   const chipLabel = (q: QuickFilter) => {
     const base = t(`spools.filter.${q}`)
@@ -112,12 +121,47 @@ export default function SpoolToolbar({
         <select
           className={`chip shrink-0 cursor-pointer max-w-[10rem] ${filter.material ? 'chip-on' : ''}`}
           value={filter.material}
-          onChange={e => set({ material: e.target.value })}
+          onChange={e => set({ material: e.target.value, subtype: '' })}
           aria-label={t('spools.table.material')}
         >
           <option value="">{t('spools.filterMaterial')}</option>
           {materials.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
+        {brands.length > 0 && (
+          <select
+            className={`chip shrink-0 cursor-pointer max-w-[10rem] ${filter.brand ? 'chip-on' : ''}`}
+            value={filter.brand}
+            onChange={e => set({ brand: e.target.value })}
+            aria-label={t('spools.filterBrandLabel')}
+          >
+            <option value="">{t('spools.filterBrand')}</option>
+            {brands.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        )}
+        {subtypes.length > 0 && (
+          <select
+            className={`chip shrink-0 cursor-pointer max-w-[10rem] ${filter.subtype ? 'chip-on' : ''}`}
+            value={filter.subtype}
+            onChange={e => set({ subtype: e.target.value })}
+            aria-label={t('spools.filterSubtypeLabel')}
+          >
+            <option value="">{t('spools.filterSubtype')}</option>
+            {subtypes.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
+        {colorFamilies.length > 0 && (
+          <button
+            className={`chip shrink-0 gap-1.5 ${filter.colorFamily ? 'chip-on' : ''}`}
+            aria-expanded={colorsOpen}
+            onClick={() => setColorsOpen(o => !o)}
+          >
+            {filter.colorFamily && (
+              <span className="inline-block w-3 h-3 rounded-full border border-white/30" style={swatchStyle(filter.colorFamily)} />
+            )}
+            {filter.colorFamily ? t(`spools.colorFamily.${filter.colorFamily}`) : t('spools.filterColor')}
+            <ChevronDown size={12} className={colorsOpen ? 'rotate-180' : ''} />
+          </button>
+        )}
         {locations.length > 0 && (
           <select
             className={`chip shrink-0 cursor-pointer max-w-[10rem] ${filter.location ? 'chip-on' : ''}`}
@@ -141,13 +185,31 @@ export default function SpoolToolbar({
             {SORT_KEYS.map(k => <option key={k} value={k}>{t(`spools.sort.${k}`)}</option>)}
           </select>
         </label>
-        {(filter.q || filter.material || filter.location || filter.quick !== 'all') && (
+        {hasFilter && (
           <button
             className="chip shrink-0 text-accent"
-            onClick={() => onFilter({ q: '', quick: 'all', material: '', location: '' })}
+            onClick={() => onFilter({ ...EMPTY_FILTER })}
           ><X size={12} />{t('spools.table.clearFilters')}</button>
         )}
       </div>
+
+      {colorsOpen && colorFamilies.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('spools.filterColor')}>
+          {COLOR_FAMILIES.filter(c => colorFamilies.includes(c.key)).map(c => {
+            const on = filter.colorFamily === c.key
+            const name = t(`spools.colorFamily.${c.key}`)
+            return (
+              <button
+                key={c.key}
+                title={name} aria-label={name} aria-pressed={on}
+                onClick={() => set({ colorFamily: on ? '' : c.key })}
+                className={`w-8 h-8 rounded-full border-2 shrink-0 ${on ? 'border-accent ring-2 ring-accent/40' : 'border-white/20'}`}
+                style={swatchStyle(c.key)}
+              />
+            )
+          })}
+        </div>
+      )}
 
       <p className="text-xs text-gray-500">
         {t('spools.summary', { count: total })} · {fmtNum(kg, 2)} kg · {t('spools.stockValue')} {fmtCurrency(value)}

@@ -17,7 +17,7 @@ import { SpoolTiles, SpoolList } from '../components/spools/SpoolViews'
 import type { ViewActions } from '../components/spools/SpoolViews'
 import { SpoolDetailColumn, SpoolDetailSheet } from '../components/spools/SpoolDetail'
 import type { DetailActions } from '../components/spools/SpoolDetail'
-import { EMPTY_FILTER, FILTER_PARAM, defaultDir, filterSpools, isLow, isMoist, loadSort, saveSort, sortSpools } from '../components/spools/spoolFilters'
+import { COLOR_FAMILIES, EMPTY_FILTER, FILTER_PARAM, colorFamily, defaultDir, filterSpools, isFull, isLow, isMoist, loadSort, saveSort, sortSpools } from '../components/spools/spoolFilters'
 import type { SortKey, SortState, SpoolFilter } from '../components/spools/spoolFilters'
 import { EMPTY_FORM, SpoolForm } from '../components/spools/SpoolForm'
 import { SpoolAuditModal, MoistureModal, WeighModal } from '../components/spools/SpoolModals'
@@ -120,10 +120,21 @@ export default function Spools() {
     all: active.length,
     moist: active.filter(isMoist).length,
     low: active.filter(s => isLow(s, lowPct)).length,
+    full: active.filter(isFull).length,
     ams: active.filter(s => !!s.ams_slot).length,
   }), [active, lowPct])
   const materials = useMemo(() => [...new Set(spools.map(s => s.material).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [spools])
   const locations = useMemo(() => [...new Set(spools.map(s => s.storage_location).filter((l): l is string => !!l))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), [spools])
+  const brands = useMemo(() => [...new Set(spools.map(s => s.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [spools])
+  // sub-types offered for the chosen material only (all of them without a material)
+  const subtypes = useMemo(() => [...new Set(
+    spools.filter(s => !filter.material || s.material === filter.material)
+      .flatMap(s => [s.subtype, s.subtype2]).filter((v): v is string => !!v),
+  )].sort((a, b) => a.localeCompare(b)), [spools, filter.material])
+  const colorFamilies = useMemo(() => {
+    const present = new Set(spools.map(colorFamily))
+    return COLOR_FAMILIES.filter(c => present.has(c.key)).map(c => c.key)
+  }, [spools])
   const shown = useMemo(() => sortSpools(filterSpools(spools, filter, lowPct), sort), [spools, filter, lowPct, sort])
   const totalKg = shown.reduce((sum, s) => sum + s.current_weight_g, 0) / 1000
   const totalValue = shown.reduce((sum, s) => sum + (s.cost_per_gram ?? 0) * s.current_weight_g, 0)
@@ -251,6 +262,9 @@ export default function Spools() {
         counts={counts}
         materials={materials}
         locations={locations}
+        brands={brands}
+        subtypes={subtypes}
+        colorFamilies={colorFamilies}
         view={view}
         onView={setView}
         sort={sort}

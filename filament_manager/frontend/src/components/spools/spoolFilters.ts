@@ -3,13 +3,17 @@
 import type { Spool } from '../../types'
 import { effectiveEffect } from '../../utils/colorLook'
 
-export type QuickFilter = 'all' | 'moist' | 'low' | 'ams' | 'archived'
-export const QUICK_FILTERS: QuickFilter[] = ['all', 'moist', 'low', 'ams', 'archived']
+export type QuickFilter = 'all' | 'moist' | 'low' | 'full' | 'ams' | 'archived'
+export const QUICK_FILTERS: QuickFilter[] = ['all', 'moist', 'low', 'full', 'ams', 'archived']
+
+/** A spool counts as "full" from this remaining percentage on (unopened or barely used). */
+export const FULL_PCT = 95
 
 /** Values of the deep link `#/spools?filter=…` (used by the Home Assistant buttons). */
 export const FILTER_PARAM: Record<string, QuickFilter> = {
   wenig: 'low', low: 'low',
   feucht: 'moist', moist: 'moist',
+  voll: 'full', full: 'full',
   ams: 'ams',
   archiv: 'archived', archived: 'archived',
 }
@@ -19,8 +23,53 @@ export interface SpoolFilter {
   quick: QuickFilter
   material: string
   location: string
+  brand: string
+  subtype: string
+  colorFamily: ColorFamily | ''
 }
-export const EMPTY_FILTER: SpoolFilter = { q: '', quick: 'all', material: '', location: '' }
+export const EMPTY_FILTER: SpoolFilter = { q: '', quick: 'all', material: '', location: '', brand: '', subtype: '', colorFamily: '' }
+
+export type ColorFamily =
+  | 'black' | 'white' | 'grey' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'pink' | 'brown' | 'multi'
+/** Order of the colour dots in the filter bar, with a representative swatch each. */
+export const COLOR_FAMILIES: { key: ColorFamily; hex: string }[] = [
+  { key: 'black', hex: '#1a1a1a' }, { key: 'white', hex: '#f5f5f5' }, { key: 'grey', hex: '#8a8a8a' },
+  { key: 'red', hex: '#e03131' }, { key: 'orange', hex: '#f08c00' }, { key: 'yellow', hex: '#fcc419' },
+  { key: 'green', hex: '#2f9e44' }, { key: 'blue', hex: '#1c7ed6' }, { key: 'violet', hex: '#7048e8' },
+  { key: 'pink', hex: '#e64980' }, { key: 'brown', hex: '#8d5524' },
+  { key: 'multi', hex: 'conic-gradient(#e03131, #fcc419, #2f9e44, #1c7ed6, #7048e8, #e03131)' },
+]
+
+/** Colour family of a spool, derived from its hex colour (null if the colour is unusable). */
+export function colorFamily(s: Spool): ColorFamily | null {
+  if (s.color2_hex) return 'multi'
+  const m = /^#?([0-9a-f]{6})/i.exec((s.color_hex ?? '').trim())
+  if (!m) return null
+  const n = parseInt(m[1], 16)
+  const r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  const d = max - min
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1))
+  if (l < 0.15) return 'black'
+  if (l > 0.92) return 'white'
+  if (sat < 0.15) return l > 0.78 ? 'white' : 'grey'
+  let h = 0
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6
+    else if (max === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
+    h *= 60
+    if (h < 0) h += 360
+  }
+  if (h >= 345 || h < 15) return l > 0.75 ? 'pink' : 'red'
+  if (h < 45) return l < 0.38 ? 'brown' : 'orange'
+  if (h < 70) return l < 0.35 ? 'brown' : 'yellow'
+  if (h < 165) return 'green'
+  if (h < 260) return 'blue'
+  if (h < 300) return 'violet'
+  return 'pink'
+}
 
 export type SortKey = 'ams' | 'number' | 'name' | 'material' | 'rest' | 'weight'
 export type SortDir = 'asc' | 'desc'
@@ -34,6 +83,9 @@ export function isMoist(s: Spool): boolean {
 }
 export function isLow(s: Spool, lowPct: number): boolean {
   return !s.archived && s.remaining_pct < lowPct
+}
+export function isFull(s: Spool): boolean {
+  return !s.archived && s.remaining_pct >= FULL_PCT
 }
 
 export function spoolTitle(s: Spool): string {
@@ -63,9 +115,13 @@ export function filterSpools(spools: Spool[], f: SpoolFilter, lowPct: number): S
     if (f.quick === 'archived' ? !s.archived : s.archived) return false
     if (f.quick === 'moist' && !isMoist(s)) return false
     if (f.quick === 'low' && !isLow(s, lowPct)) return false
+    if (f.quick === 'full' && !isFull(s)) return false
     if (f.quick === 'ams' && !s.ams_slot) return false
     if (f.material && s.material !== f.material) return false
     if (f.location && (s.storage_location ?? '') !== f.location) return false
+    if (f.brand && s.brand !== f.brand) return false
+    if (f.subtype && s.subtype !== f.subtype && s.subtype2 !== f.subtype) return false
+    if (f.colorFamily && colorFamily(s) !== f.colorFamily) return false
     if (words.length) {
       const h = haystack(s)
       if (!words.every(w => h.includes(w))) return false

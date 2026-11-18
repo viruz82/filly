@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.22.0
+
+- **More filters on the Spools page**: new dropdowns for **brand** and **sub-type** (the sub-type list only offers the types of the chosen material), a **Full** quick filter (95 % or more left) and a **Color** filter with colour dots (black, white, grey, red, orange, yellow, green, blue, violet, pink, brown, multicolor). The family is derived from the spool's hex colour; spools with more than one colour count as multicolor. Only families that exist in your stock are offered. "Clear filters" resets all of them. Deep link: `#/spools?filter=full`.
+
 ## 1.21.2
 
 - **Empty AMS slot no longer asks for a spool**: when a tray was emptied, the cache kept the last material and colour, so the Printers page and the dashboard card kept asking "Which spool is in AMS 1 · T4?". An empty tray (a tray message that carries only its id, or a cleared bit in `tray_exist_bits`) now drops its old profile and shows as empty. A message with a profile always wins over the bit mask.
