@@ -982,7 +982,7 @@
     "toSpool": "Open spool",
     "clearSlot": "Empty slot",
     "changeSpool": "Change spool …",
-    "legendTitle": "What do the marks mean?",
+    "legendTitle": "What do the labels on the slots mean?",
     "legendAsk": "Which spool is in …?",
     "legend": {
       "assigned": "This spool is assigned to the slot; the print books its filament from it.",

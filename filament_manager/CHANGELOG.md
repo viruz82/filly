@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.23.1
+
+- **AMS legend heading**: "What do the marks mean?" is now "What do the labels on the slots mean?" (the entries are labels, not symbols).
+
 ## 1.23.0
 
 - **Choose the spool when logging usage**: the "Log filament usage" window ("Usage missing") now has a spool dropdown in every row (spools in the AMS first, then all others by number; the browser's type-to-find works on "#13"). Until now the spool could not be changed there, and for older prints it silently took whatever sits in the AMS tray *now*. That case is now marked "Only a guess: this is what sits in the tray now". New: a row can be saved **without a spool** (grams only, nothing is deducted), and **+ Add spool** adds more rows (several colours or spools).

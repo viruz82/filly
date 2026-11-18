@@ -982,7 +982,7 @@
     "toSpool": "Abrir bobina",
     "clearSlot": "Vaciar ranura",
     "changeSpool": "Cambiar bobina …",
-    "legendTitle": "¿Qué significan las marcas?",
+    "legendTitle": "¿Qué significan las etiquetas de las ranuras?",
     "legendAsk": "¿Qué bobina está en …?",
     "legend": {
       "assigned": "Esta bobina está asignada a la ranura; la impresión descuenta su filamento.",

@@ -982,7 +982,7 @@
     "toSpool": "Zur Spule",
     "clearSlot": "Fach leeren",
     "changeSpool": "Spule ändern …",
-    "legendTitle": "Was bedeuten die Zeichen?",
+    "legendTitle": "Was bedeuten die Schilder an den Fächern?",
     "legendAsk": "Welche Spule steckt in …?",
     "legend": {
       "assigned": "Diese Spule ist dem Fach zugeordnet; der Druck bucht sein Filament von ihr.",
