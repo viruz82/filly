@@ -213,7 +213,7 @@
       "colorPlaceholder": "Fire Red, Black, …",
       "tareOwn": "Own value for this spool (empty = brand value)",
       "packaging": "Packaging",
-      "packagingHint": "How the spool is stored; while in the AMS the AMS storage applies.",
+      "packagingHint": "Where the spool is kept when it is not in the AMS. While it sits in the AMS, \"In AMS\" applies automatically. A spool stored as \"Original packaging\" is set to \"Open on shelf\" automatically when it is loaded into the AMS.",
       "justDried": "Just dried"
     },
     "table": {
@@ -307,6 +307,14 @@
     "editPrint": "Edit Print",
     "noPrints": "No prints logged yet.",
     "logUsage": "Log Filament Usage",
+    "changeUsage": "Change spool / usage",
+    "changeUsageHint": "On save, the earlier usage is booked back to the old spools and the new one is deducted from the chosen spools.",
+    "pickSpool": "Choose spool …",
+    "noSpoolOption": "No spool (record grams only)",
+    "groupAms": "In AMS",
+    "groupOthers": "Other spools",
+    "spoolFromTray": "Only a guess: this is what sits in the tray now. Is it the right spool?",
+    "addSpoolRow": "+ Add spool",
     "form": {
       "printName": "Print Name",
       "modelFile": "Model File",

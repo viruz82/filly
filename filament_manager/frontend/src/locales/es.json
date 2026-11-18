@@ -213,7 +213,7 @@
       "colorPlaceholder": "Rojo fuego, Negro, …",
       "tareOwn": "Valor propio de esta bobina (vacío = valor de la marca)",
       "packaging": "Embalaje",
-      "packagingHint": "Cómo se guarda la bobina; en el AMS se aplica el almacenamiento del AMS.",
+      "packagingHint": "Dónde se guarda la bobina cuando no está en el AMS. Mientras está en el AMS se aplica automáticamente «En el AMS». Una bobina «En envase original» pasa a «Abierta en la estantería» al cargarla en el AMS.",
       "justDried": "Recién secada"
     },
     "table": {
@@ -307,6 +307,14 @@
     "editPrint": "Editar impresión",
     "noPrints": "No hay impresiones registradas aún.",
     "logUsage": "Registrar uso de filamento",
+    "changeUsage": "Cambiar bobina / consumo",
+    "changeUsageHint": "Al guardar, el consumo anterior se devuelve a las bobinas antiguas y el nuevo se descuenta de las elegidas.",
+    "pickSpool": "Elegir bobina …",
+    "noSpoolOption": "Sin bobina (solo registrar gramos)",
+    "groupAms": "En el AMS",
+    "groupOthers": "Otras bobinas",
+    "spoolFromTray": "Solo una suposición: es lo que hay ahora en la ranura. ¿Es la bobina correcta?",
+    "addSpoolRow": "+ Añadir bobina",
     "form": {
       "printName": "Nombre de la impresión",
       "modelFile": "Archivo de modelo",

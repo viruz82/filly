@@ -213,7 +213,7 @@
       "colorPlaceholder": "Feuerrot, Schwarz, …",
       "tareOwn": "Eigener Wert dieser Spule (leer = Wert der Marke)",
       "packaging": "Verpackung",
-      "packagingHint": "Wie die Spule lagert; im AMS gilt automatisch die AMS-Lagerung.",
+      "packagingHint": "Wo die Spule liegt, wenn sie nicht im AMS steckt. Solange sie im AMS steckt, zählt automatisch „Im AMS“. Eine „Originalverpackt“-Spule wird beim Einlegen ins AMS automatisch auf „Offen im Regal“ gesetzt.",
       "justDried": "Gerade getrocknet"
     },
     "table": {
@@ -307,6 +307,14 @@
     "editPrint": "Druck bearbeiten",
     "noPrints": "Noch keine Drucke erfasst.",
     "logUsage": "Filamentverbrauch erfassen",
+    "changeUsage": "Spule / Verbrauch ändern",
+    "changeUsageHint": "Beim Speichern wird der bisherige Verbrauch auf den alten Spulen zurückgebucht und der neue von den gewählten Spulen abgezogen.",
+    "pickSpool": "Spule wählen …",
+    "noSpoolOption": "Ohne Spule (nur Gramm erfassen)",
+    "groupAms": "Im AMS",
+    "groupOthers": "Weitere Spulen",
+    "spoolFromTray": "Nur geraten: so liegt es aktuell im Fach. Stimmt die Spule?",
+    "addSpoolRow": "+ Spule hinzufügen",
     "form": {
       "printName": "Druckname",
       "modelFile": "Modelldatei",

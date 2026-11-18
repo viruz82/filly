@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.23.0
+
+- **Choose the spool when logging usage**: the "Log filament usage" window ("Usage missing") now has a spool dropdown in every row (spools in the AMS first, then all others by number; the browser's type-to-find works on "#13"). Until now the spool could not be changed there, and for older prints it silently took whatever sits in the AMS tray *now*. That case is now marked "Only a guess: this is what sits in the tray now". New: a row can be saved **without a spool** (grams only, nothing is deducted), and **+ Add spool** adds more rows (several colours or spools).
+- **Change spool / usage afterwards**: for a print with booked usage the "…" menu has **Change spool / usage**. On save the old usage is booked back to the old spools and the new one is deducted from the chosen ones.
+- **Packaging hint clarified**: it now says that the field is where the spool lies when it is *not* in the AMS, that "In AMS" applies automatically while loaded, and that an "Original packaging" spool is set to "Open on shelf" when it is loaded into the AMS (that was always the behaviour, it just was not explained).
+
 ## 1.22.2
 
 - **Spool numbers are assigned automatically**: a new spool gets the highest number in use plus one (archived spools count, so a number always belongs to one spool; gaps are not refilled). The field is renamed from "# (Reference)" to **Spool number** and shows the number with a **change** link; only after clicking it can the number be typed. When changing a number, the free numbers below the highest one are listed and can be clicked. With quantity above 1 every spool gets its own number, and duplicating a spool no longer copies the number.
