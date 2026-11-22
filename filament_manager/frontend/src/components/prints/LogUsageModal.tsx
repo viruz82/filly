@@ -113,6 +113,12 @@ export function LogUsageModal({
     onSave(usages)
   }
 
+  // Failed / aborted print without any filament used: book 0 g (reverts earlier usage).
+  const handleNoUsage = () => {
+    if (confirmed && !window.confirm(t('prints.noUsageConfirm'))) return
+    onSave([])
+  }
+
   const addRow = () => setRows(rs => [...rs, {
     spool_id: '', grams: '', ams_slot: null, color: null, filament_type: '',
     estimated: false, swap_index: null, guess: false, extra: true,
@@ -238,6 +244,9 @@ export function LogUsageModal({
               {t('prints.logManually')}
             </button>
           )}
+          <button className="btn-secondary" onClick={handleNoUsage}>
+            {t('prints.noUsage')}
+          </button>
           <button className="btn-primary" onClick={handleSave} disabled={!canSave}>
             {t('prints.saveUsage')}
           </button>

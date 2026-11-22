@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.23.3
+
+- **No usage (0 g)**: the usage dialog has a new button "No usage (0 g)" for failed or aborted prints without filament use. It closes the print with 0 g and books any earlier usage back to the spools. Before, saving was blocked unless at least one row had more than 0 g.
+
 ## 1.23.2
 
 - **Hand-picked spool stays assigned**: a spool you choose for an AMS slot ("Which spool is in AMS 1 · T1?") is now remembered together with the material and colour the printer reports at that moment. Before, the card kept asking again whenever the colour set at the slot (e.g. the palette red) was more than the colour tolerance away from the inventory colour of the spool, so the choice looked as if it had not been applied. The question only comes back when the printer reports a different material or colour later.

@@ -369,6 +369,8 @@
     "countOf": "von",
     "confirmDelete": "Druck \"{{name}}\" löschen?",
     "loadMore": "Mehr laden ({{n}} verbleibend)",
+    "noUsage": "Kein Verbrauch (0 g)",
+    "noUsageConfirm": "Bisherigen Verbrauch auf die Spulen zurückbuchen und 0 g speichern?",
     "saveUsage": "Verbrauch speichern",
     "gramsHint": "Gramm pro Fach eingeben. Lagerbestand wird beim Speichern aktualisiert.",
     "cloudSuggestion": "Werte vom Drucker vorausgefüllt — bitte prüfen und ggf. anpassen.",
