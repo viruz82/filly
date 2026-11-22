@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.23.2
+
+- **Hand-picked spool stays assigned**: a spool you choose for an AMS slot ("Which spool is in AMS 1 · T1?") is now remembered together with the material and colour the printer reports at that moment. Before, the card kept asking again whenever the colour set at the slot (e.g. the palette red) was more than the colour tolerance away from the inventory colour of the spool, so the choice looked as if it had not been applied. The question only comes back when the printer reports a different material or colour later.
+
 ## 1.23.1
 
 - **AMS legend heading**: "What do the marks mean?" is now "What do the labels on the slots mean?" (the entries are labels, not symbols).

@@ -133,6 +133,12 @@ async def lifespan(app: FastAPI):
             conn.commit()
             log.info("Migration: added spools.archived")
 
+        # spools: manual AMS assignment confirmed against the printer's reported filament
+        if "ams_confirmed" not in spool_cols:
+            conn.execute(text("ALTER TABLE spools ADD COLUMN ams_confirmed VARCHAR"))
+            conn.commit()
+            log.info("Migration: added spools.ams_confirmed")
+
         # spools: last label print
         if "label_printed_at" not in spool_cols:
             conn.execute(text("ALTER TABLE spools ADD COLUMN label_printed_at DATETIME"))

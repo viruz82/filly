@@ -232,6 +232,26 @@ class TestAssignAMSTray:
         # spool2 should be assigned
         assert client.get(f"/api/spools/{spool2['id']}").json()["ams_slot"] == "My Printer:ams1_tray1"
 
+    def test_manual_assignment_is_confirmed_until_printer_reports_something_else(self, client):
+        """A spool picked by hand stays 'confirmed' although its inventory colour differs from the
+        slot colour; a changed slot colour revokes the confirmation."""
+        printer = _create_printer(client, bambu_serial="SN1")
+        spool = _create_spool(client, color_hex="#BC2726")
+        slot = {"ams1_tray1": {"material": "PLA", "color": "#F72323FF", "remain": 100}}
+        ams = "app.bambu_cloud_client.get_ams_detail_for_serial"
+
+        with patch(ams, return_value=slot):
+            client.post(f"/api/printers/{printer['id']}/ams/ams1_tray1/assign",
+                        json={"spool_id": spool["id"]})
+            tray = client.get(f"/api/printers/{printer['id']}/ams").json()[0]
+        assert tray["spool"]["id"] == spool["id"]
+        assert tray["confirmed"] is True
+
+        changed = {"ams1_tray1": {"material": "PLA", "color": "#0000FFFF", "remain": 100}}
+        with patch(ams, return_value=changed):
+            tray = client.get(f"/api/printers/{printer['id']}/ams").json()[0]
+        assert tray["confirmed"] is False
+
     def test_assign_invalid_printer_returns_404(self, client):
         spool = _create_spool(client)
         r = client.post(

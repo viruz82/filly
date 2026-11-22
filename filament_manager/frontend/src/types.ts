@@ -323,6 +323,8 @@ export interface AMSTray {
   ha_color_hex: string | null
   ha_remaining: string | null
   spool: Spool | null
+  /** the user assigned this spool by hand for exactly what the printer reports now */
+  confirmed?: boolean
 }
 
 

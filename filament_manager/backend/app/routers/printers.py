@@ -42,6 +42,11 @@ class PrinterOut(BaseModel):
 
 # ── AMS tray assignment ───────────────────────────────────────────────────────
 
+def _tray_signature(td: dict) -> str:
+    """Material and colour the printer reports for a tray, as one comparable string."""
+    return f"{(td.get('material') or '').strip().lower()}|{(td.get('color') or '').strip().upper()}"
+
+
 @router.get("/{printer_id}/ams")
 async def get_ams_trays(printer_id: int, db: Session = Depends(get_db)):
     """
@@ -78,6 +83,8 @@ async def get_ams_trays(printer_id: int, db: Session = Depends(get_db)):
         # Negative remain (typically -1) means "not tracked by AMS" — show nothing
         ha_remaining = str(round(remain_val, 1)) if remain_val is not None and remain_val >= 0 else None
         result.append({
+            # True: the user assigned this spool by hand for exactly what the printer reports now
+            "confirmed":    bool(spool and spool.ams_confirmed and spool.ams_confirmed == _tray_signature(td)),
             "slot_key":     slot_key,
             "ams_id":       u,
             "tray":         t,
@@ -186,6 +193,7 @@ def assign_ams_tray(
     ).all():
         if holder.id != spool_id:
             moisture.set_ams_slot(holder, None)   # leaves the AMS → keep its dryness value
+            holder.ams_confirmed = None
 
     previous_slot: str | None = None
     if spool_id is not None:
@@ -195,6 +203,15 @@ def assign_ams_tray(
         if spool.ams_slot and spool.ams_slot != full_key:
             previous_slot = spool.ams_slot
         moisture.set_ams_slot(spool, full_key)
+        # Remember what the printer reports for this slot: the user's choice then counts as
+        # correct until the printer reports something else (colour set at the slot differs
+        # from the inventory colour, e.g. "Red" vs. the AMS palette red).
+        spool.ams_confirmed = None
+        if p.bambu_serial:
+            from .. import bambu_cloud_client
+            td = bambu_cloud_client.get_ams_detail_for_serial(p.bambu_serial).get(slot_key)
+            if td:
+                spool.ams_confirmed = _tray_signature(td)
 
     db.commit()
     from .. import ha_publisher

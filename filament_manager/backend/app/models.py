@@ -58,6 +58,7 @@ class Spool(Base):
     moisture_anchor_at = Column(DateTime, nullable=True)  # value frozen at a storage change …
     moisture_anchor_pct = Column(Float, nullable=True)    # … and decays from here on
     ams_slot = Column(String)
+    ams_confirmed = Column(String, nullable=True)    # "material|colour" the printer reported when the user assigned this spool by hand
     bambu_spool_id = Column(String, nullable=True)   # Bambu Cloud filament spool ID (int64 stored as str)
     bambu_synced_at = Column(DateTime, nullable=True)  # last successful Bambu sync timestamp
     notes = Column(Text)

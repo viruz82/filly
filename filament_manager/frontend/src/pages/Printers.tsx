@@ -145,7 +145,7 @@ type SlotKind = 'empty' | 'assigned' | 'changed' | 'ask'
 function slotKind(tr: AMSTray): SlotKind {
   const hasFilament = !!tr.ha_material && !!tr.ha_color_hex && tr.ha_remaining !== '0' && tr.ha_remaining !== '0.0'
   if (tr.spool) {
-    if (!hasFilament) return 'assigned'
+    if (!hasFilament || tr.confirmed) return 'assigned'
     const d = colorDelta(tr.ha_color_hex, tr.spool.color_hex)
     const fits = materialMatches(tr.ha_material as string, tr.spool) && d !== null && d <= COLOR_TOLERANCE
     return fits ? 'assigned' : 'changed'
