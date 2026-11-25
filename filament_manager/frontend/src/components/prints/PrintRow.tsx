@@ -78,7 +78,8 @@ export function PrintRow({ job, printer, onEdit, onDelete, onLogUsage }: {
   const menuItems: MenuItem[] = [
     { key: 'edit', label: t('common.edit'), icon: <Pencil size={14} />, onClick: onEdit },
     ...(needsUsage ? [{ key: 'usage', label: t('prints.logUsage'), icon: <Scale size={14} />, onClick: onLogUsage }] : []),
-    ...(!needsUsage && job.usages.length > 0 ? [{ key: 'usage', label: t('prints.changeUsage'), icon: <Scale size={14} />, onClick: onLogUsage }] : []),
+    // also after "no usage (0 g)", so a wrong click can be undone here and not only via edit
+    ...(!needsUsage && (job.usages.length > 0 || (job.source === 'auto' && job.finished_at)) ? [{ key: 'usage', label: t('prints.changeUsage'), icon: <Scale size={14} />, onClick: onLogUsage }] : []),
     { key: 'delete', label: t('common.delete'), icon: <Trash2 size={14} />, onClick: onDelete, danger: true },
   ]
 

@@ -48,6 +48,8 @@ export function LogUsageModal({
 
   const confirmed = job.usages.length > 0
   const suggestions = job.suggested_usages ?? []
+  // Booked as "no usage (0 g)": no usages and the suggestions were cleared on confirm.
+  const zeroBooked = !confirmed && job.suggested_usages === null
 
   // Older suggestions have no spool_id: look up the tray (what sits there NOW, so only a guess).
   const { data: printers = [] } = useQuery<PrinterConfig[]>({
@@ -68,12 +70,27 @@ export function LogUsageModal({
           color: u.spool?.color_hex ?? null, filament_type: u.spool?.material ?? '',
           estimated: false, swap_index: null, guess: false, extra: false,
         }))
-      : suggestions.map(s => ({
-          spool_id: s.spool_id ?? '', grams: String(s.grams), ams_slot: s.ams_slot,
-          color: s.color, filament_type: s.filament_type,
-          estimated: !!s.estimated, swap_index: s.swap_index ?? null, guess: false, extra: false,
-        })),
+      : zeroBooked
+        ? [{
+            spool_id: '', grams: '', ams_slot: null, color: null, filament_type: '',
+            estimated: false, swap_index: null, guess: false, extra: true,
+          }]
+        : suggestions.map(s => ({
+            spool_id: s.spool_id ?? '', grams: String(s.grams), ams_slot: s.ams_slot,
+            color: s.color, filament_type: s.filament_type,
+            estimated: !!s.estimated, swap_index: s.swap_index ?? null, guess: false, extra: false,
+          })),
   )
+
+  // A row may point to an archived spool (e.g. a suggestion for a spool used up since):
+  // load it with the archived ones so the row shows its number and name, not the internal id.
+  const activeIds = new Set(spools.map(s => s.id))
+  const needArchived = rows.some(r => typeof r.spool_id === 'number' && !activeIds.has(r.spool_id))
+  const { data: allSpools = [] } = useQuery<Spool[]>({
+    queryKey: ['spools', 'with-archived'],
+    queryFn: () => api.getSpools(true),
+    enabled: needArchived,
+  })
 
   // Fill rows without a spool from the current tray content, marked as a guess.
   useEffect(() => {
@@ -132,7 +149,7 @@ export function LogUsageModal({
       <div className="bg-surface-2 border border-surface-3 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-surface-3">
           <div>
-            <h2 className="font-semibold">{confirmed ? t('prints.changeUsage') : t('prints.logUsage')}</h2>
+            <h2 className="font-semibold">{confirmed || zeroBooked ? t('prints.changeUsage') : t('prints.logUsage')}</h2>
             <p className="text-xs text-gray-500 mt-0.5 truncate max-w-xs">{job.name}</p>
           </div>
           <button onClick={onCancel} className="btn-ghost p-1"><X size={16} /></button>
@@ -140,7 +157,7 @@ export function LogUsageModal({
 
         <div className="p-5 space-y-4 overflow-y-auto">
           <p className="text-xs text-info bg-info/15 rounded px-3 py-1.5">
-            {confirmed ? t('prints.changeUsageHint') : t('prints.cloudSuggestion')}
+            {confirmed ? t('prints.changeUsageHint') : zeroBooked ? t('prints.zeroBookedHint') : t('prints.cloudSuggestion')}
           </p>
 
           {rows.length === 0 && (
@@ -153,7 +170,10 @@ export function LogUsageModal({
           )}
 
           {rows.map((r, i) => {
-            const spool = typeof r.spool_id === 'number' ? spools.find(sp => sp.id === r.spool_id) ?? null : null
+            const spool = typeof r.spool_id === 'number'
+              ? spools.find(sp => sp.id === r.spool_id) ?? allSpools.find(sp => sp.id === r.spool_id) ?? null
+              : null
+            const inactive = typeof r.spool_id === 'number' && !activeIds.has(r.spool_id)
             const swapLabel = r.swap_index === 0 ? t('prints.swapOriginal') : r.swap_index === 1 ? t('prints.swapReplacement') : null
             return (
               <div key={i} className={`flex items-start gap-3 ${r.swap_index != null ? 'rounded-lg border border-warn/40 bg-warn/15 p-2' : ''}`}>
@@ -172,7 +192,13 @@ export function LogUsageModal({
                   >
                     <option value="">{t('prints.pickSpool')}</option>
                     <option value={NO_SPOOL}>{t('prints.noSpoolOption')}</option>
-                    {typeof r.spool_id === 'number' && !spool && <option value={r.spool_id}>#{r.spool_id}</option>}
+                    {inactive && (
+                      <option value={r.spool_id as number}>
+                        {spool
+                          ? (spool.archived ? `${spoolText(spool)} – ${t('prints.archivedSpool')}` : spoolText(spool))
+                          : needArchived && allSpools.length === 0 ? '…' : t('prints.spoolGone')}
+                      </option>
+                    )}
                     {inAms.length > 0 && (
                       <optgroup label={t('prints.groupAms')}>
                         {inAms.map(s => <option key={s.id} value={s.id}>{spoolText(s)}</option>)}
@@ -237,16 +263,19 @@ export function LogUsageModal({
           <p className="text-xs text-gray-500 pt-1">{t('prints.gramsHint')}</p>
         </div>
 
-        <div className="flex justify-end gap-2 px-5 py-4 border-t border-surface-3">
+        {/* Labels stay on one line; on narrow screens the buttons wrap into a second row. */}
+        <div className="flex flex-wrap justify-end gap-2 px-5 py-4 border-t border-surface-3 [&>button]:whitespace-nowrap">
           <button className="btn-ghost" onClick={onCancel}>{t('common.cancel')}</button>
-          {hasUnresolved && rows.length > 0 && !confirmed && (
+          {hasUnresolved && rows.length > 0 && !confirmed && !zeroBooked && (
             <button className="btn-secondary" onClick={onEdit}>
               {t('prints.logManually')}
             </button>
           )}
-          <button className="btn-secondary" onClick={handleNoUsage}>
-            {t('prints.noUsage')}
-          </button>
+          {!zeroBooked && (
+            <button className="btn-secondary" onClick={handleNoUsage}>
+              {t('prints.noUsage')}
+            </button>
+          )}
           <button className="btn-primary" onClick={handleSave} disabled={!canSave}>
             {t('prints.saveUsage')}
           </button>

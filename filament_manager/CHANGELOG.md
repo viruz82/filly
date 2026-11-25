@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.23.4
+
+- **Archived spool in the usage dialog**: when a suggestion points to a spool that was archived since (e.g. used up), the spool choice now shows its number and name with "archived". Before, it showed the internal database id (e.g. "#14"), which could be mistaken for the active spool with that number.
+- **Dialog buttons**: the button labels stay on one line; on narrow screens the buttons wrap into a second row instead of squeezing the text.
+- **Change usage after 0 g**: a print booked with "No usage (0 g)" keeps the menu entry "Change spool / usage". The dialog opens with an empty spool row to add the usage; before, a wrong click could only be fixed via "Edit".
+
 ## 1.23.3
 
 - **No usage (0 g)**: the usage dialog has a new button "No usage (0 g)" for failed or aborted prints without filament use. It closes the print with 0 g and books any earlier usage back to the spools. Before, saving was blocked unless at least one row had more than 0 g.
