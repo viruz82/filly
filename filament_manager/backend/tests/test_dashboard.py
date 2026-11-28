@@ -96,6 +96,18 @@ class TestSpoolCounts:
         _create_spool(client, color_name="Empty", initial_weight_g=1000, current_weight_g=0)
         assert _stats(client)["low_stock_spools"] == 0
 
+    def test_archived_spool_not_in_low_stock_or_totals(self, client):
+        sp = _create_spool(client, color_name="Archived", initial_weight_g=1000,
+                           current_weight_g=100, purchase_price=20)
+        assert client.post(f"/api/spools/{sp['id']}/archive").status_code == 200
+        s = _stats(client)
+        assert s["low_stock_spools"] == 0
+        assert s["low_stock"] == []
+        assert s["almost_empty_spools"] == 0
+        assert s["active_spools"] == 0
+        assert s["total_available_kg"] == 0.0
+        assert s["total_available_eur"] == 0.0
+
     def test_low_stock_sorted_ascending_by_pct(self, client):
         _create_spool(client, color_name="10pct", initial_weight_g=1000, current_weight_g=100)
         _create_spool(client, color_name="5pct", initial_weight_g=1000, current_weight_g=50)

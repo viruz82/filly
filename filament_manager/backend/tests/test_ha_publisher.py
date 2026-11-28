@@ -40,6 +40,17 @@ class TestLowStockSensor:
 
         assert attrs["spools"] == ["Jayo PETG Black (149g)"]
 
+    def test_archived_spool_not_counted(self, session):
+        s = Spool(brand="Jayo", material="PETG", color_name="Black",
+                  color_hex="#000000", initial_weight_g=1000.0, current_weight_g=100.0,
+                  archived=True)
+        session.add(s); session.commit()
+
+        state, attrs = _compute(session)["sensor.filament_manager_low_stock_spools"]
+
+        assert state == 0
+        assert attrs["spools"] == []
+
 
 class TestAmsSpoolsSensor:
     def test_lists_spools_placed_in_slots(self, session):

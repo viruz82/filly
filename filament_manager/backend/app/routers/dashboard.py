@@ -17,7 +17,8 @@ async def get_dashboard(db: Session = Depends(get_db)):
     low_stock_threshold = (prefs.low_stock_threshold_pct if prefs else None) or 20
 
     spools = db.query(Spool).all()
-    active_spools = [s for s in spools if s.current_weight_g > 0]
+    # Archived spools are gone from the shelf: no stock warnings, no stock totals
+    active_spools = [s for s in spools if not s.archived and s.current_weight_g > 0]
     empty_spools  = [s for s in spools if s.current_weight_g <= 0]
     low_stock     = [s for s in active_spools if 0 < s.remaining_pct < low_stock_threshold]
     almost_empty_threshold = (prefs.almost_empty_threshold_pct if prefs else None) or 8

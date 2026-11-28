@@ -162,7 +162,7 @@ def _compute(db) -> dict[str, tuple[int, dict]]:
     spools = db.query(Spool).all()
     low = [
         s for s in spools
-        if s.current_weight_g > 0 and 0 < s.remaining_pct < threshold
+        if not s.archived and s.current_weight_g > 0 and 0 < s.remaining_pct < threshold
     ]
     low_names = [f"{s.brand} {s.material} {s.color_name} ({round(s.current_weight_g)}g)".strip() for s in low]
     almost_empty_names = [

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.23.5
+
+- **Archived spools no longer warn**: low stock and almost empty (dashboard and the Home Assistant sensor `low_stock_spools`) ignore archived spools. The available stock (kg and value) on the dashboard no longer counts them either.
+
 ## 1.23.4
 
 - **Archived spool in the usage dialog**: when a suggestion points to a spool that was archived since (e.g. used up), the spool choice now shows its number and name with "archived". Before, it showed the internal database id (e.g. "#14"), which could be mistaken for the active spool with that number.
